@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
   const { data: tenant } = await supabase.from("tenants").select("*").eq("id", tenantId).single();
   if (!tenant) return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
 
+  const stripe = getStripe();
   let customerId = tenant.stripe_customer_id;
   if (!customerId) {
     const customer = await stripe.customers.create({ email: tenant.billing_email, metadata: { tenant_id: tenantId } });
