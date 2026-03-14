@@ -1,8 +1,17 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-12-18.acacia" as any,
-});
+let _stripe: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
+    _stripe = new Stripe(key, {
+      apiVersion: "2024-12-18.acacia" as any,
+    });
+  }
+  return _stripe;
+}
 
 export const PLANS = {
   free: {
@@ -20,4 +29,4 @@ export const PLANS = {
     prices: { ads: "price_ads_pro", analytics: "price_analytics_pro" },
     limits: { posts_per_month: 5000, team_members: 10 },
   },
-} as const;
+};
