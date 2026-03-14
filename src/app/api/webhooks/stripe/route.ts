@@ -3,10 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -21,6 +25,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Webhook signature failed' }, { status: 400 });
   }
 
+  const supabaseAdmin = getSupabaseAdmin();
   const obj = event.data.object as any;
 
   if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
