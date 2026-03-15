@@ -55,10 +55,9 @@ export default function PricingPage() {
             <span className="text-yellow-400">Pricing</span> - Dein Plan
           </h1>
           <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-            Starte kostenlos und wachse mit deinem Business. Alle Pl\u00e4ne monatlich k\u00fcndbar.
+            Starte kostenlos und wachse mit deinem Business. Alle Plaene monatlich kuendbar.
           </p>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {PLANS.map((plan) => (
             <div
@@ -74,13 +73,13 @@ export default function PricingPage() {
               </h3>
               <p className="text-zinc-500 text-sm mb-4">{plan.description}</p>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-white">{plan.price}\u20ac</span>
+                <span className="text-4xl font-bold text-white">{plan.price}EUR</span>
                 <span className="text-zinc-500">{plan.period}</span>
               </div>
               <ul className="space-y-2 mb-6">
                 {plan.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-zinc-300">
-                    <span className="text-yellow-400 mt-0.5">\u2713</span>
+                    <span className="text-yellow-400 mt-0.5">OK</span>
                     {f}
                   </li>
                 ))}
