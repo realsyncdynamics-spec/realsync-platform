@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Calendar, CheckSquare, LayoutDashboard, LogOut, PlusCircle, Settings, Share2, ShieldCheck, Users, Zap } from "lucide-react";
+import { BarChart3, Calendar, CheckSquare, LayoutDashboard, LogOut, Megaphone, PlusCircle, Search, Settings, Share2, ShieldCheck, Users, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const nav = [
@@ -11,6 +11,8 @@ const nav = [
   { href: "/dashboard/social-accounts", icon: Users, label: "Social Accounts" },
   { href: "/dashboard/verify", icon: CheckSquare, label: "Verifikation" },
   { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/dashboard/market-scanner", icon: Search, label: "Market Scanner" },
+  { href: "/dashboard/campaigns", icon: Megaphone, label: "Kampagnen" },
   { href: "/dashboard/billing", icon: Zap, label: "Billing" },
   { href: "/dashboard/settings", icon: Settings, label: "Einstellungen" },
 ];
@@ -18,19 +20,16 @@ const nav = [
 export default function Sidebar({ user, plan }: { user: any; plan: string }) {
   const pathname = usePathname();
   const router = useRouter();
-
   const logout = async () => {
     await createClient().auth.signOut();
     router.push("/login");
   };
-
   const planColors: Record<string, string> = {
     free: "border-zinc-700 text-zinc-400",
     starter: "border-yellow-800 text-yellow-600",
     pro: "border-yellow-600 text-yellow-400",
     enterprise: "border-yellow-400 text-yellow-300",
   };
-
   return (
     <aside className="w-56 shrink-0 bg-zinc-900 border-r border-yellow-900/30 flex flex-col h-screen sticky top-0">
       {/* Logo */}
@@ -50,7 +49,6 @@ export default function Sidebar({ user, plan }: { user: any; plan: string }) {
           </span>
         </div>
       </div>
-
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {nav.map(({ href, icon: Icon, label }) => {
@@ -71,7 +69,6 @@ export default function Sidebar({ user, plan }: { user: any; plan: string }) {
           );
         })}
       </nav>
-
       {/* User */}
       <div className="px-4 py-4 border-t border-yellow-900/30">
         <div className="text-xs text-zinc-600 truncate mb-2 font-mono">{user?.email}</div>
