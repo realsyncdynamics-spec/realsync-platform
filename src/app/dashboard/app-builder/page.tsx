@@ -2,12 +2,12 @@
 import React, { useState } from 'react';
 
 const templates = [
-  { id: 'landing', name: 'Landing Page', desc: 'Responsive Landing mit Hero, Features, Pricing', icon: '🌐' },
-  { id: 'dashboard', name: 'Dashboard App', desc: 'Admin-Dashboard mit Charts, Tabellen, Sidebar', icon: '📊' },
-  { id: 'ecommerce', name: 'E-Commerce Shop', desc: 'Produktkatalog, Warenkorb, Stripe Checkout', icon: '🛒' },
-  { id: 'blog', name: 'Blog / CMS', desc: 'Markdown-Blog mit Kategorien und Suche', icon: '📝' },
-  { id: 'saas', name: 'SaaS Starter', desc: 'Auth, Billing, Multi-Tenant mit API', icon: '🚀' },
-  { id: 'portfolio', name: 'Portfolio', desc: 'Kreatives Portfolio mit Galerie und Kontakt', icon: '🎨' },
+  { id: 'landing', name: 'RealSync Landing', desc: 'Responsive Landing mit Hero, Features, Pricing', icon: '🌐' },
+  { id: 'dashboard', name: 'RealSync Dashboard', desc: 'Admin-Dashboard mit Charts, Tabellen, Sidebar', icon: '📊' },
+  { id: 'ecommerce', name: 'RealSync Shop', desc: 'Produktkatalog, Warenkorb, Stripe Checkout', icon: '🛒' },
+  { id: 'blog', name: 'RealSync Blog', desc: 'Markdown-Blog mit Kategorien und Suche', icon: '📝' },
+  { id: 'saas', name: 'RealSync SaaS', desc: 'Auth, Billing, Multi-Tenant mit API', icon: '🚀' },
+  { id: 'portfolio', name: 'RealSync Portfolio', desc: 'Kreatives Portfolio mit Galerie und Kontakt', icon: '🎨' },
 ];
 
 export default function AppBuilderPage() {
@@ -36,8 +36,8 @@ export default function AppBuilderPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">Multi-App Builder</h1>
-      <p className="text-gray-400 mb-8">Erstelle komplette Web-Apps in Minuten - kostenlos</p>
+      <h1 className="text-3xl font-bold mb-2">RealSync AppBuilder</h1>
+      <p className="text-gray-400 mb-8">Erstelle komplette RealSync Web-Apps in Minuten - kostenlos</p>
 
       <div className="flex gap-4 mb-8">
         {[1,2,3].map(s => (
@@ -52,7 +52,7 @@ export default function AppBuilderPage() {
 
       {step === 1 && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">1. Waehle ein Template</h2>
+          <h2 className="text-xl font-semibold mb-4">1. Waehle ein RealSync Template</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {templates.map(t => (
               <button key={t.id} onClick={() => setSelected(t.id)}
@@ -67,10 +67,10 @@ export default function AppBuilderPage() {
           </div>
           {selected && (
             <div className="mt-6">
-              <label className="block text-sm font-medium mb-2">App Name</label>
+              <label className="block text-sm font-medium mb-2">App Name (RealSync ...)</label>
               <input value={appName} onChange={e => setAppName(e.target.value)}
                 className="w-full max-w-md px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg"
-                placeholder="Meine neue App..." />
+                placeholder="RealSync MeineApp..." />
               <button onClick={() => setStep(2)}
                 disabled={!appName}
                 className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium disabled:opacity-50">
@@ -90,7 +90,7 @@ export default function AppBuilderPage() {
                 className={`p-3 rounded-lg border text-sm text-left transition-all ${
                   features.includes(f) ? 'border-green-500 bg-green-500/10 text-green-300' : 'border-gray-700 bg-gray-900 hover:border-gray-500'
                 }`}>
-                {features.includes(f) ? '✓ ' : '○ '}{f}
+                {features.includes(f) ? 'OK ' : 'o '}{f}
               </button>
             ))}
           </div>
@@ -105,7 +105,7 @@ export default function AppBuilderPage() {
 
       {step === 3 && !done && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">3. App generieren</h2>
+          <h2 className="text-xl font-semibold mb-4">3. RealSync App generieren</h2>
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-6">
             <p><strong>Template:</strong> {templates.find(t => t.id === selected)?.name}</p>
             <p><strong>App Name:</strong> {appName}</p>
@@ -114,15 +114,15 @@ export default function AppBuilderPage() {
               <button onClick={() => setStep(2)} className="px-6 py-2 bg-gray-700 rounded-lg">Zurueck</button>
               <button onClick={handleGenerate} disabled={generating}
                 className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-medium disabled:opacity-50">
-                {generating ? 'Generiere...' : 'App generieren (kostenlos)'}
+                {generating ? 'Generiere...' : 'RealSync App generieren (kostenlos)'}
               </button>
             </div>
           </div>
           {generating && (
             <div className="mt-6 space-y-3">
-              <div className="flex items-center gap-3"><span className="animate-spin">⚙</span> Erstelle Projektstruktur...</div>
-              <div className="flex items-center gap-3"><span className="animate-spin">⚙</span> Installiere Abhaengigkeiten...</div>
-              <div className="flex items-center gap-3"><span className="animate-spin">⚙</span> Generiere Komponenten...</div>
+              <div className="flex items-center gap-3"><span className="animate-spin">*</span> Erstelle RealSync Projektstruktur...</div>
+              <div className="flex items-center gap-3"><span className="animate-spin">*</span> Installiere Abhaengigkeiten...</div>
+              <div className="flex items-center gap-3"><span className="animate-spin">*</span> Generiere RealSync Komponenten...</div>
             </div>
           )}
         </div>
@@ -130,14 +130,14 @@ export default function AppBuilderPage() {
 
       {done && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">✅</div>
+          <div className="text-6xl mb-4">OK</div>
           <h2 className="text-2xl font-bold mb-2">{appName} wurde erstellt!</h2>
-          <p className="text-gray-400 mb-6">Deine App ist bereit zum Deployment</p>
+          <p className="text-gray-400 mb-6">Deine RealSync App ist bereit zum Deployment</p>
           <div className="flex justify-center gap-4">
             <button className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium">Auf Vercel deployen</button>
             <button className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium">Code herunterladen</button>
             <button onClick={() => { setDone(false); setStep(1); setSelected(null); setAppName(''); setFeatures([]); }}
-              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-medium">Neue App</button>
+              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-medium">Neue RealSync App</button>
           </div>
         </div>
       )}
