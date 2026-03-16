@@ -15,84 +15,68 @@ const DEMO_SIGNALS = [
 
 export default function MarketScannerPage() {
   const [filter, setFilter] = useState("all");
-
   const filtered = filter === "all" ? DEMO_SIGNALS : DEMO_SIGNALS.filter(s => s.signal.toLowerCase() === filter);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold text-yellow-400 mb-2">Market Scanner</h1>
-      <p className="text-zinc-400 mb-6">Echtzeit-Signale f\u00fcr Creator-M\u00e4rkte, Crypto & Ads</p>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-3xl font-bold text-yellow-400">RealSync MarketScanner</h1>
+        <span className="px-3 py-1 bg-purple-600/20 border border-purple-500 rounded-full text-xs text-purple-300 font-medium">by RealSync Apps</span>
+      </div>
+      <p className="text-zinc-400 mb-6">Echtzeit-Signale fuer Creator-Maerkte, Crypto & Ads</p>
 
       <div className="flex gap-2 mb-6">
         {["all", "bullish", "neutral", "bearish"].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
+          <button key={f} onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              filter === f
-                ? "bg-yellow-500 text-black"
-                : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-            }`}
-          >
+              filter === f ? "bg-yellow-500 text-black" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+            }`}>
             {f === "all" ? "Alle" : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>
 
-      <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
         <table className="w-full">
-          <thead>
-            <tr className="border-b border-zinc-800 text-zinc-400 text-sm">
-              <th className="text-left p-4">Asset / Markt</th>
-              <th className="text-left p-4">Signal</th>
-              <th className="text-left p-4">Konfidenz</th>
-              <th className="text-left p-4">\u00c4nderung</th>
-              <th className="text-left p-4">Preis / Wert</th>
+          <thead className="bg-zinc-800">
+            <tr>
+              <th className="text-left p-3 text-sm text-zinc-400">Asset</th>
+              <th className="text-left p-3 text-sm text-zinc-400">Signal</th>
+              <th className="text-left p-3 text-sm text-zinc-400">Konfidenz</th>
+              <th className="text-left p-3 text-sm text-zinc-400">Aenderung</th>
+              <th className="text-left p-3 text-sm text-zinc-400">Preis</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((item, i) => (
-              <tr key={i} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition">
-                <td className="p-4 font-medium text-white">{item.asset}</td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${
-                    item.signal === "Bullish" ? "bg-green-500/20 text-green-400" :
-                    item.signal === "Bearish" ? "bg-red-500/20 text-red-400" :
-                    "bg-yellow-500/20 text-yellow-400"
-                  }`}>
-                    {item.signal}
-                  </span>
+            {filtered.map((s, i) => (
+              <tr key={i} className="border-t border-zinc-800 hover:bg-zinc-800/50">
+                <td className="p-3 font-medium">{s.asset}</td>
+                <td className="p-3">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    s.signal === "Bullish" ? "bg-green-800 text-green-300" :
+                    s.signal === "Bearish" ? "bg-red-800 text-red-300" :
+                    "bg-yellow-800 text-yellow-300"
+                  }`}>{s.signal}</span>
                 </td>
-                <td className="p-4">
+                <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-20 h-2 bg-zinc-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${
-                          item.confidence >= 70 ? "bg-green-500" :
-                          item.confidence >= 50 ? "bg-yellow-500" : "bg-red-500"
-                        }`}
-                        style={{ width: `${item.confidence}%` }}
-                      />
+                    <div className="w-16 bg-zinc-700 rounded-full h-2">
+                      <div className={`h-2 rounded-full ${
+                        s.confidence >= 75 ? "bg-green-500" : s.confidence >= 60 ? "bg-yellow-500" : "bg-red-500"
+                      }`} style={{ width: `${s.confidence}%` }} />
                     </div>
-                    <span className="text-zinc-400 text-sm">{item.confidence}%</span>
+                    <span className="text-sm text-zinc-400">{s.confidence}%</span>
                   </div>
                 </td>
-                <td className={`p-4 font-medium ${
-                  item.change.startsWith("+") ? "text-green-400" :
-                  item.change.startsWith("-") ? "text-red-400" : "text-zinc-400"
-                }`}>
-                  {item.change}
-                </td>
-                <td className="p-4 text-zinc-300">{item.price}</td>
+                <td className={`p-3 font-medium ${s.change.startsWith("+") ? "text-green-400" : "text-red-400"}`}>{s.change}</td>
+                <td className="p-3 text-zinc-300">{s.price}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <div className="mt-6 p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl">
-        <p className="text-zinc-500 text-sm">\ud83d\udce1 Daten werden alle 5 Minuten aktualisiert. Premium-Nutzer erhalten Echtzeit-Alerts.</p>
-      </div>
+      <div className="mt-4 text-center text-xs text-zinc-500">Powered by RealSync Apps | Daten werden alle 60s aktualisiert</div>
     </div>
   );
 }
