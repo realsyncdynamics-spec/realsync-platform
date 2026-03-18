@@ -1,0 +1,39 @@
+name: Gemini CLI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  gemini-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Gemini CLI Review
+        uses: google-github-actions/run-gemini-cli@v1
+        with:
+          prompt: |
+            Review this pull request. Focus on:
+            1. TypeScript type safety and strict mode compliance
+            2. Next.js App Router best practices
+            3. Supabase query optimization
+            4. Stripe payment security
+            5. Tailwind CSS consistency
+            6. Performance and accessibility
+            Provide actionable feedback in German.
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
