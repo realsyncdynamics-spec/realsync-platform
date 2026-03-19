@@ -1,9 +1,33 @@
 "use client";
-import { BarChart3, Calendar, CheckCircle, Instagram, LayoutDashboard, LogOut, PlusCircle, Settings, Share2, TrendingUp, Users, Zap } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { Toaster } from "react-hot-toast";
+import { usePathname } from "next/navigation";
+import {
+  Brain, CheckSquare, Eye, Shield, Trophy, Hammer, BarChart3,
+  Bot, Users, Megaphone, Zap, BookOpen, Star, Activity
+} from "lucide-react";
+import { useState, useEffect } from "react";
+
+const apps = [
+  { slug: "optimus", label: "Optimus", icon: Brain, color: "#00e5ff", status: "LIVE", angle: 270 },
+  { slug: "verify", label: "CreatorSeal", icon: Star, color: "#ffd700", status: "LIVE", angle: 300 },
+  { slug: "sicherheit", label: "Gate", icon: Eye, color: "#a855f7", status: "LIVE", angle: 330 },
+  { slug: "market-scanner", label: "AdEngine", icon: Megaphone, color: "#f43f5e", status: "BETA", angle: 0 },
+  { slug: "analytics", label: "DataCore", icon: BarChart3, color: "#06b6d4", status: "LIVE", angle: 30 },
+  { slug: "app-builder", label: "AutoOS", icon: Bot, color: "#f97316", status: "LIVE", angle: 60 },
+  { slug: "social-automation", label: "SocialHub", icon: Users, color: "#10b981", status: "LIVE", angle: 90 },
+  { slug: "schullabor", label: "EduLab", icon: BookOpen, color: "#84cc16", status: "BETA", angle: 120 },
+  { slug: "handwerk", label: "Handwerk", icon: Hammer, color: "#f59e0b", status: "LIVE", angle: 150 },
+  { slug: "wettbewerb", label: "Wettbewerb", icon: Trophy, color: "#eab308", status: "LIVE", angle: 210 },
+  { slug: "sicherheit", label: "Sicherheit", icon: Shield, color: "#22c55e", status: "LIVE", angle: 180 },
+  { slug: "agenten", label: "FlowSync", icon: Zap, color: "#8b5cf6", status: "BETA", angle: 240 },
+];
+
+const agents = [
+  { name: "Llama 3.1", status: "STANDBY", color: "#06b6d4" },
+  { name: "Claude Sonnet", status: "PRIMARY", color: "#a855f7" },
+  { name: "DeepSeek R1", status: "STANDBY", color: "#f43f5e" },
+  { name: "Perplexity AI", status: "PRIMARY", color: "#ffd700" },
+];
 
 interface Props {
   user: any;
@@ -14,176 +38,109 @@ interface Props {
 }
 
 export default function DashboardClient({ user, stats, subscription, recentPosts }: Props) {
-  const router = useRouter();
+  const [time, setTime] = useState(new Date());
+  const [hoveredApp, setHoveredApp] = useState<string | null>(null);
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
-  const planLabel = (plan: string) => (plan ?? "free").toUpperCase();
-
-  const statusColor = (s: string) => ({
-    published: "text-yellow-400",
-    scheduled: "text-yellow-300",
-    draft: "text-zinc-500",
-    failed: "text-red-500",
-    publishing: "text-yellow-200",
-  }[s] ?? "text-zinc-500");
-
-  const navItems = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/dashboard/posts", icon: Share2, label: "Posts" },
-    { href: "/dashboard/create", icon: PlusCircle, label: "Neuer Post" },
-    { href: "/dashboard/social-accounts", icon: Instagram, label: "Social Accounts" },
-    { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
-    { href: "/dashboard/billing", icon: Zap, label: "Billing" },
-    { href: "/dashboard/settings", icon: Settings, label: "Einstellungen" },
-  ];
+  const radius = 260;
+  const centerX = 350;
+  const centerY = 350;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-yellow-50 flex">
-      <Toaster position="top-right" toastOptions={{ style: { background: "#18181b", color: "#fef08a", border: "1px solid #713f12" } }} />
+    <div className="min-h-screen bg-zinc-950 text-white overflow-hidden">
+      {/* Agent Status Bar */}
+      <div className="w-full border-b border-zinc-800 bg-zinc-950/90 backdrop-blur px-4 py-2 flex items-center gap-6 text-xs font-mono overflow-x-auto">
+        <span className="text-yellow-400 font-bold tracking-widest">AGENT-STATUS</span>
+        {agents.map((a) => (
+          <span key={a.name} className="flex items-center gap-2 whitespace-nowrap">
+            <span className="font-bold" style={{ color: a.color }}>{a.name}</span>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+              a.status === "PRIMARY" ? "bg-yellow-400/20 text-yellow-400 border border-yellow-400/40" : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+            }`}>{a.status}</span>
+          </span>
+        ))}
+      </div>
 
-      {/* Sidebar */}
-      <aside className="w-60 bg-zinc-900 border-r border-yellow-900/40 flex flex-col shrink-0">
-        <div className="px-5 py-5 border-b border-yellow-900/40">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-yellow-400 rounded flex items-center justify-center font-black text-zinc-950 text-sm">R</div>
-            <span className="font-bold text-yellow-300 tracking-wide">RealSync</span>
+      {/* Main Orbit Area */}
+      <div className="relative flex items-center justify-center" style={{ height: "calc(100vh - 90px)" }}>
+        {/* Center Logo */}
+        <div className="absolute flex flex-col items-center justify-center z-10">
+          <div className="w-32 h-32 rounded-full border-2 border-yellow-500/50 bg-zinc-900/80 flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,215,0,0.15)]">
+            <span className="text-lg font-black tracking-wider text-yellow-400">RealSync</span>
+            <span className="text-[10px] text-yellow-600 tracking-[0.3em] font-bold">DYNAMICS</span>
           </div>
-          <div className="mt-2">
-            <span className="text-xs border border-yellow-700 text-yellow-400 px-2 py-0.5 rounded-sm font-mono">
-              {planLabel(subscription?.plan)}
-            </span>
-          </div>
+          <span className="mt-2 text-[10px] text-zinc-500 tracking-widest">CREATOR OS</span>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {navItems.map(({ href, icon: Icon, label }) => (
+        {/* Orbit Ring */}
+        <svg className="absolute" width="700" height="700" viewBox="0 0 700 700">
+          <circle cx="350" cy="350" r={radius} fill="none" stroke="rgba(255,215,0,0.08)" strokeWidth="1" />
+          <circle cx="350" cy="350" r={radius - 40} fill="none" stroke="rgba(255,215,0,0.04)" strokeWidth="1" strokeDasharray="4 8" />
+          <circle cx="350" cy="350" r={radius + 40} fill="none" stroke="rgba(255,215,0,0.04)" strokeWidth="1" strokeDasharray="4 8" />
+        </svg>
+
+        {/* App Nodes */}
+        {apps.map((app) => {
+          const rad = (app.angle * Math.PI) / 180;
+          const x = centerX + radius * Math.cos(rad);
+          const y = centerY + radius * Math.sin(rad);
+          const Icon = app.icon;
+          const isHovered = hoveredApp === app.slug;
+
+          return (
             <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-2.5 px-3 py-2 rounded text-zinc-400 hover:bg-yellow-950 hover:text-yellow-300 border border-transparent hover:border-yellow-900/60 transition-all text-sm"
+              key={app.slug + app.angle}
+              href={`/dashboard/${app.slug}`}
+              className="absolute flex flex-col items-center group transition-transform duration-200"
+              style={{
+                left: `calc(50% - 350px + ${x}px)`,
+                top: `calc(50% - 350px + ${y}px)`,
+                transform: `translate(-50%, -50%) ${isHovered ? "scale(1.15)" : "scale(1)"}`,
+              }}
+              onMouseEnter={() => setHoveredApp(app.slug)}
+              onMouseLeave={() => setHoveredApp(null)}
             >
-              <Icon size={15} />
-              <span>{label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="px-4 py-4 border-t border-yellow-900/40">
-          <div className="text-xs text-zinc-500 mb-2 truncate">{user.email}</div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-zinc-500 hover:text-yellow-400 transition-colors text-xs"
-          >
-            <LogOut size={13} />
-            Abmelden
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-8 max-w-6xl">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-yellow-300 tracking-tight">Dashboard</h1>
-            <p className="text-zinc-500 text-sm mt-1">Willkommen zurück, {user.email.split("@")[0]}</p>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-            {[
-              { label: "Gesamt Posts", value: stats.totalPosts, icon: Share2 },
-              { label: "Veröffentlicht", value: stats.publishedPosts, icon: CheckCircle },
-              { label: "Geplant", value: stats.scheduledPosts, icon: Calendar },
-              { label: "Social Accounts", value: stats.socialAccounts, icon: Users },
-            ].map(({ label, value, icon: Icon }) => (
-              <div key={label} className="bg-zinc-900 border border-yellow-900/40 rounded-lg p-4 hover:border-yellow-700/60 transition-colors">
-                <Icon size={16} className="text-yellow-500 mb-2" />
-                <div className="text-2xl font-bold text-yellow-300">{value}</div>
-                <div className="text-xs text-zinc-500 mt-0.5">{label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-            {/* Quick Actions */}
-            <div className="bg-zinc-900 border border-yellow-900/40 rounded-lg p-5">
-              <h2 className="text-sm font-semibold text-yellow-400 mb-4 flex items-center gap-2 uppercase tracking-widest">
-                <TrendingUp size={14} /> Schnellaktionen
-              </h2>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { href: "/dashboard/create", icon: PlusCircle, label: "Post erstellen", accent: true },
-                  { href: "/dashboard/social-accounts", icon: Instagram, label: "Account verbinden", accent: false },
-                  { href: "/dashboard/posts", icon: Calendar, label: "Geplante Posts", accent: false },
-                  { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics", accent: false },
-                ].map(({ href, icon: Icon, label, accent }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded border text-xs font-medium transition-all ${
-                      accent
-                        ? "bg-yellow-400 text-zinc-950 border-yellow-400 hover:bg-yellow-300"
-                        : "bg-zinc-800 border-yellow-900/40 text-zinc-300 hover:border-yellow-700/60 hover:text-yellow-300"
-                    }`}
-                  >
-                    <Icon size={18} />
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Posts */}
-            <div className="bg-zinc-900 border border-yellow-900/40 rounded-lg p-5">
-              <h2 className="text-sm font-semibold text-yellow-400 mb-4 uppercase tracking-widest">Letzte Posts</h2>
-              {recentPosts.length === 0 ? (
-                <div className="text-center text-zinc-600 py-8">
-                  <Share2 size={28} className="mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">Noch keine Posts</p>
-                  <Link href="/dashboard/create" className="text-yellow-500 text-xs hover:text-yellow-300 mt-2 block">
-                    Ersten Post erstellen →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {recentPosts.map((post: any) => (
-                    <div key={post.id} className="p-3 bg-zinc-800 border border-yellow-900/30 rounded">
-                      <p className="text-xs text-zinc-300 truncate">{post.content.substring(0, 70)}...</p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <span className={`text-xs font-mono ${statusColor(post.status)}`}>{post.status}</span>
-                        <span className="text-zinc-600 text-xs">• {post.platform}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Upgrade Banner */}
-          {(!subscription || subscription?.plan === "free") && (
-            <div className="border border-yellow-700/60 bg-yellow-950/30 rounded-lg p-5 flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-yellow-300">Upgrade zu Pro</h3>
-                <p className="text-zinc-400 text-xs mt-1">5.000 Posts/Monat • 10 Team-Mitglieder • Erweiterte Analytics</p>
-              </div>
-              <Link
-                href="/dashboard/billing"
-                className="border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-zinc-950 px-5 py-1.5 rounded text-sm font-semibold transition-all"
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all duration-300"
+                style={{
+                  borderColor: app.color,
+                  backgroundColor: `${app.color}10`,
+                  boxShadow: isHovered ? `0 0 30px ${app.color}40, 0 0 60px ${app.color}20` : `0 0 15px ${app.color}15`,
+                }}
               >
-                Upgrade
-              </Link>
-            </div>
-          )}
-        </div>
-      </main>
+                <Icon size={28} style={{ color: app.color }} />
+              </div>
+              <span className="mt-2 text-xs font-bold tracking-wide" style={{ color: app.color }}>
+                {app.label}
+              </span>
+              <span className={`mt-1 px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${
+                app.status === "LIVE"
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                  : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+              }`}>
+                {app.status}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Bottom Status Ticker */}
+      <div className="fixed bottom-0 left-0 w-full border-t border-zinc-800 bg-zinc-950/95 backdrop-blur px-4 py-1.5 flex items-center gap-8 text-[10px] font-mono overflow-x-auto">
+        <span className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-emerald-400 font-bold">LIVE</span>
+        </span>
+        <span className="text-zinc-500">AI Optimus · Perplexity-First · 9 Modelle <span className="text-emerald-400 font-bold">ONLINE</span></span>
+        <span className="text-zinc-500">DATA DataCore · Comet-powered Marktdaten <span className="text-emerald-400 font-bold">LIVE</span></span>
+        <span className="text-zinc-500">Posts: <span className="text-yellow-400">{stats.totalPosts}</span> · Published: <span className="text-yellow-400">{stats.publishedPosts}</span> · Scheduled: <span className="text-yellow-400">{stats.scheduledPosts}</span></span>
+        <span className="text-zinc-500">Accounts: <span className="text-cyan-400">{stats.socialAccounts}</span></span>
+        <span className="ml-auto text-zinc-600">{time.toLocaleTimeString("de-DE")}</span>
+      </div>
     </div>
   );
 }
