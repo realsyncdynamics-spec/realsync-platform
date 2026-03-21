@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,6 +42,70 @@ export default function LoginPage() {
   };
 
   return (
+    <div className="border border-yellow-900/50 bg-zinc-900 rounded-xl p-8">
+      {registered && (
+        <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
+          Registrierung erfolgreich! Bitte melde dich jetzt an.
+        </div>
+      )}
+
+      <h2 className="text-yellow-300 font-semibold mb-1">Anmelden</h2>
+      <p className="text-zinc-500 text-xs mb-6">Melde dich mit deiner E-Mail und Passwort an.</p>
+
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <label className="block text-xs text-yellow-600 font-mono uppercase tracking-widest mb-1.5">
+            E-Mail Adresse
+          </label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="creator@example.com"
+            className="w-full bg-zinc-800 border border-yellow-900/50 rounded px-4 py-2.5 text-yellow-50 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-yellow-600 transition-colors"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-yellow-600 font-mono uppercase tracking-widest mb-1.5">
+            Passwort
+          </label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Dein Passwort"
+            className="w-full bg-zinc-800 border border-yellow-900/50 rounded px-4 py-2.5 text-yellow-50 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-yellow-600 transition-colors"
+          />
+        </div>
+
+        {error && (
+          <p className="text-red-400 text-xs border border-red-900/50 bg-red-950/30 rounded px-3 py-2">{error}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-zinc-950 font-bold py-2.5 rounded transition-colors flex items-center justify-center gap-2"
+        >
+          {loading ? 'Anmelden...' : 'Jetzt anmelden'}
+        </button>
+      </form>
+
+      <p className="text-center text-zinc-500 text-xs mt-6">
+        Noch kein Konto?{' '}
+        <Link href="/register" className="text-yellow-400 hover:underline">
+          Kostenlos registrieren
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
@@ -55,65 +119,9 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="border border-yellow-900/50 bg-zinc-900 rounded-xl p-8">
-          {registered && (
-            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
-              Registrierung erfolgreich! Bitte melde dich jetzt an.
-            </div>
-          )}
-
-          <h2 className="text-yellow-300 font-semibold mb-1">Anmelden</h2>
-          <p className="text-zinc-500 text-xs mb-6">Melde dich mit deiner E-Mail und Passwort an.</p>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs text-yellow-600 font-mono uppercase tracking-widest mb-1.5">
-                E-Mail Adresse
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="creator@example.com"
-                className="w-full bg-zinc-800 border border-yellow-900/50 rounded px-4 py-2.5 text-yellow-50 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-yellow-600 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-yellow-600 font-mono uppercase tracking-widest mb-1.5">
-                Passwort
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Dein Passwort"
-                className="w-full bg-zinc-800 border border-yellow-900/50 rounded px-4 py-2.5 text-yellow-50 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-yellow-600 transition-colors"
-              />
-            </div>
-
-            {error && (
-              <p className="text-red-400 text-xs border border-red-900/50 bg-red-950/30 rounded px-3 py-2">{error}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-zinc-950 font-bold py-2.5 rounded transition-colors flex items-center justify-center gap-2"
-            >
-              {loading ? 'Anmelden...' : 'Jetzt anmelden'}
-            </button>
-          </form>
-
-          <p className="text-center text-zinc-500 text-xs mt-6">
-            Noch kein Konto?{' '}
-            <Link href="/register" className="text-yellow-400 hover:underline">
-              Kostenlos registrieren
-            </Link>
-          </p>
-        </div>
+        <Suspense fallback={<div className="border border-yellow-900/50 bg-zinc-900 rounded-xl p-8 text-center text-zinc-500">Laden...</div>}>
+          <LoginForm />
+        </Suspense>
 
         <div className="mt-8 grid grid-cols-3 gap-3 text-center">
           {[
