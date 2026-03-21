@@ -18,6 +18,7 @@ const apps = [
   { name: 'ScheduleMaster', icon: Calendar, color: '#F97316', href: '/apps/schedulemaster/dashboard', desc: 'KI-Content Planer' },
   { name: 'FanConnect', icon: Heart, color: '#EF4444', href: '/apps/fanconnect/dashboard', desc: 'Community Management' },
   { name: 'CertificateGen', icon: Award, color: '#FBBF24', href: '/apps/certificategen/dashboard', desc: 'PDF/QR Zertifikate & Blockchain' },
+    { name: 'Gate', icon: Shield, color: '#C9A84C', href: '/apps/gate/dashboard', desc: 'Central Ecosystem Router' },
 ];
 
 export default function StargatePage() {
