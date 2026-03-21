@@ -51,6 +51,9 @@ export default function ReviewRadarDashboard() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
             <Link href="/" className="text-blue-200 text-sm hover:text-white">← RealSync</Link>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href="/pricing?app=reviewradar" className="text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full transition-all">💎 Upgrade</Link>
             <h1 className="text-xl font-bold mt-1">⭐ ReviewRadar</h1>
             <p className="text-blue-200 text-sm">Mein Betrieb · München</p>
           </div>
@@ -73,7 +76,7 @@ export default function ReviewRadarDashboard() {
         <div className="max-w-4xl mx-auto flex items-center gap-3 text-sm">
           <span className="text-yellow-600 font-bold text-xs border border-yellow-400 px-1 rounded">Anzeige</span>
           <span className="text-yellow-800">Upgrade auf Premium — Keine Werbung + ∞ KI-Antworten ab €4,99/Mo</span>
-          <Link href="/apps/reviewradar" className="text-blue-600 font-bold ml-auto hover:underline">Upgrade →</Link>
+          <Link href="/pricing?app=reviewradar" className="text-blue-600 font-bold ml-auto hover:underline">Upgrade →</Link>
         </div>
       </div>
 

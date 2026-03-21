@@ -36,6 +36,7 @@ export default function WaitlistKitDashboard() {
           <div className="flex gap-2">
             <span className="bg-lime-400/10 border border-lime-400/30 text-lime-400 text-xs font-bold px-3 py-1 rounded-full">{total} auf Waitlist</span>
             <span className="bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-bold px-3 py-1 rounded-full">+{todayNew} heute</span>
+            <a href="/pricing?app=waitlistkit" className="bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-bold px-3 py-1 rounded-full hover:bg-purple-500/20 transition-all">💎 Upgrade</a>
           </div>
         </div>
       </div>

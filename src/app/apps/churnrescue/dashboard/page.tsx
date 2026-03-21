@@ -38,6 +38,7 @@ export default function ChurnRescueDashboard() {
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold px-3 py-1 rounded-full">Live Monitoring</span>
+            <a href="/pricing?app=churnrescue" className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold px-3 py-1 rounded-full hover:bg-cyan-500/20 transition-all">💎 Upgrade</a>
           </div>
         </div>
       </div>
