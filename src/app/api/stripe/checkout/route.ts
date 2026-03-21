@@ -6,78 +6,122 @@ const PLANS = {
   bronze: {
     name: 'Bronze',
     priceId: process.env.STRIPE_BRONZE_PRICE_ID || 'price_bronze_monthly',
-    price: 1900, // 19.00 EUR
+    price: 1900,
     currency: 'eur',
   },
   silber: {
     name: 'Silber',
     priceId: process.env.STRIPE_SILBER_PRICE_ID || 'price_silber_monthly',
-    price: 4900, // 49.00 EUR
+    price: 3900,
     currency: 'eur',
   },
   gold: {
     name: 'Gold',
     priceId: process.env.STRIPE_GOLD_PRICE_ID || 'price_gold_monthly',
-    price: 9900, // 99.00 EUR
+    price: 7900,
     currency: 'eur',
+  },
+} as const;
+
+// Feature-Limits pro Plan fuer ALLE 13 Apps im Oekosystem
+export const PLAN_FEATURES = {
+  free: {
+    c2pa: { scans: 50, reports: false },
+    watermark: { files: 100, customBranding: false },
+    blockchain: { hashes: 25, realtime: false },
+    certificates: { count: 10, customTemplates: false },
+    barcode: { count: 50, analytics: false },
+    adEngine: { campaigns: 2, aiGeneration: false },
+    analytics: { retention: 7, exportCsv: false },
+    storage: { gb: 1, cdn: false },
+    workflows: { count: 3, advanced: false },
+    collabHub: { members: 2, brandDeals: false },
+    schedulemaster: { posts: 30, multiPlatform: false },
+    fanconnect: { communities: 1, directMessages: false },
+    trendradar: { alerts: 5, historicalData: false },
+  },
+  bronze: {
+    c2pa: { scans: 500, reports: true },
+    watermark: { files: 1000, customBranding: false },
+    blockchain: { hashes: 250, realtime: false },
+    certificates: { count: 100, customTemplates: true },
+    barcode: { count: 500, analytics: true },
+    adEngine: { campaigns: 10, aiGeneration: false },
+    analytics: { retention: 30, exportCsv: true },
+    storage: { gb: 10, cdn: false },
+    workflows: { count: 10, advanced: false },
+    collabHub: { members: 10, brandDeals: true },
+    schedulemaster: { posts: 150, multiPlatform: true },
+    fanconnect: { communities: 3, directMessages: true },
+    trendradar: { alerts: 25, historicalData: false },
+  },
+  silber: {
+    c2pa: { scans: 5000, reports: true },
+    watermark: { files: 10000, customBranding: true },
+    blockchain: { hashes: 2500, realtime: true },
+    certificates: { count: 1000, customTemplates: true },
+    barcode: { count: 5000, analytics: true },
+    adEngine: { campaigns: 50, aiGeneration: true },
+    analytics: { retention: 90, exportCsv: true },
+    storage: { gb: 50, cdn: true },
+    workflows: { count: 50, advanced: true },
+    collabHub: { members: 50, brandDeals: true },
+    schedulemaster: { posts: 500, multiPlatform: true },
+    fanconnect: { communities: 10, directMessages: true },
+    trendradar: { alerts: 100, historicalData: true },
+  },
+  gold: {
+    c2pa: { scans: -1, reports: true },
+    watermark: { files: -1, customBranding: true },
+    blockchain: { hashes: -1, realtime: true },
+    certificates: { count: -1, customTemplates: true },
+    barcode: { count: -1, analytics: true },
+    adEngine: { campaigns: -1, aiGeneration: true },
+    analytics: { retention: 365, exportCsv: true },
+    storage: { gb: 500, cdn: true },
+    workflows: { count: -1, advanced: true },
+    collabHub: { members: -1, brandDeals: true },
+    schedulemaster: { posts: -1, multiPlatform: true },
+    fanconnect: { communities: -1, directMessages: true },
+    trendradar: { alerts: -1, historicalData: true },
   },
 };
 
-export async function POST(request: NextRequest) {
+type PlanKey = 'bronze' | 'silber' | 'gold';
+
+export async function POST(req: NextRequest) {
   try {
-    const { plan, email } = await request.json();
+    const { plan, email } = await req.json();
+    const planKey = plan as PlanKey;
 
-    if (!plan || !PLANS[plan as keyof typeof PLANS]) {
-      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
+    if (!PLANS[planKey]) {
+      return NextResponse.json({ error: 'Invalid plan. Choose bronze, silber, or gold.' }, { status: 400 });
     }
 
-    const selectedPlan = PLANS[plan as keyof typeof PLANS];
-    const origin = request.headers.get('origin') || 'https://realsync-platform.vercel.app';
+    const selectedPlan = PLANS[planKey];
 
-    // If Stripe key is configured, create real checkout session
-    if (STRIPE_SECRET_KEY && STRIPE_SECRET_KEY.startsWith('sk_')) {
-      const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          'mode': 'subscription',
-          'payment_method_types[0]': 'card',
-          'line_items[0][price]': selectedPlan.priceId,
-          'line_items[0][quantity]': '1',
-          'success_url': `${origin}/dashboard?checkout=success&plan=${plan}`,
-          'cancel_url': `${origin}/pricing?checkout=cancelled`,
-          ...(email ? { 'customer_email': email } : {}),
-          'metadata[plan]': plan,
-          'metadata[platform]': 'realsync',
-          'allow_promotion_codes': 'true',
-        }),
-      });
+    // Production Stripe Integration (uncomment with real keys)
+    // const stripe = new Stripe(STRIPE_SECRET_KEY);
+    // const session = await stripe.checkout.sessions.create({
+    //   mode: 'subscription',
+    //   payment_method_types: ['card'],
+    //   customer_email: email,
+    //   line_items: [{ price: selectedPlan.priceId, quantity: 1 }],
+    //   success_url: `${req.nextUrl.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}`,
+    //   cancel_url: `${req.nextUrl.origin}/pricing`,
+    //   metadata: { plan: planKey, email },
+    // });
+    // return NextResponse.json({ url: session.url, sessionId: session.id });
 
-      const session = await response.json();
-
-      if (session.error) {
-        return NextResponse.json({ error: session.error.message }, { status: 400 });
-      }
-
-      return NextResponse.json({
-        sessionId: session.id,
-        url: session.url,
-      });
-    }
-
-    // Demo mode - return mock checkout URL
+    // Mock Checkout (Development)
+    const mockSessionId = `cs_mock_${Date.now()}_${planKey}`;
     return NextResponse.json({
-      sessionId: `demo_${plan}_${Date.now()}`,
-      url: `${origin}/dashboard?checkout=success&plan=${plan}&demo=true`,
-      demo: true,
-      plan: selectedPlan.name,
-      price: `${(selectedPlan.price / 100).toFixed(2)} EUR/Monat`,
+      url: `${req.nextUrl.origin}/checkout/success?session_id=${mockSessionId}&plan=${planKey}`,
+      sessionId: mockSessionId,
+      plan: selectedPlan,
+      features: PLAN_FEATURES[planKey],
     });
-  } catch (error) {
-    console.error('Stripe checkout error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: 'Checkout failed' }, { status: 500 });
   }
 }
