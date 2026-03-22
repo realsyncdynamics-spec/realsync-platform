@@ -1,6 +1,33 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { PlanId, PLANS as PLAN_DATA, hasFeature } from '@/lib/plans';
+
+// ── Plan Gate — shows locked overlay for insufficient plans ──
+function LockGate({ required, current, children, label }: {
+  required: PlanId; current: PlanId; children: React.ReactNode; label: string;
+}) {
+  const order: PlanId[] = ['gratis','bronze','silber','gold','platin','diamant'];
+  if (order.indexOf(current) >= order.indexOf(required)) return <>{children}</>;
+  const req = PLAN_DATA[required];
+  return (
+    <div style={{ position:'relative', borderRadius:12, overflow:'hidden' }}>
+      <div style={{ filter:'blur(3px)', pointerEvents:'none', userSelect:'none', opacity:.35 }}>{children}</div>
+      <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'rgba(3,5,10,.82)', borderRadius:12, border:'1px solid #1F2937', gap:8 }}>
+        <span style={{ fontSize:22 }}>🔒</span>
+        <div style={{ fontWeight:800, fontSize:12, color:'#E4E6EF', textAlign:'center' }}>{label}</div>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.35)', textAlign:'center' }}>
+          Ab <span style={{ color:req.color, fontWeight:700 }}>{req.emoji} {req.name} · €{req.price.monthly}/Mo</span>
+        </div>
+        <Link href={`/pricing?highlight=${required}`}
+          style={{ marginTop:4, padding:'6px 14px', background:req.color, borderRadius:20, color:'#000', fontFamily:"'DM Mono',monospace", fontSize:10, fontWeight:700, textDecoration:'none' }}>
+          Upgraden →
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 const GOLD = "#C9A84C";
 const CYAN = "#00F0FF";

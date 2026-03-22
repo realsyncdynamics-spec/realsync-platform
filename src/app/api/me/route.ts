@@ -1,13 +1,14 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-  const { data: tenants } = await supabase.from("user_tenants").select("*, tenant:tenant_id(*)").eq("user_id", user.id);
-
-  return NextResponse.json({ user, profile, tenants });
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*, social_accounts(platform, username, followers), subscriptions(plan_id, status, current_period_end)')
+    .eq('id', user.id)
+    .single();
+  return NextResponse.json({ user: { ...user, ...profile } });
 }
