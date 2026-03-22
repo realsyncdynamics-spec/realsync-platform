@@ -1,244 +1,705 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
 
-const PLANS = {
-  gratis:  { name:'Gratis',  emoji:'🆓', color:'#6B7280', verify:1, watermark:false, blockchain:false, c2pa:false },
-  bronze:  { name:'Bronze',  emoji:'🥉', color:'#CD7F32', verify:2, watermark:true,  blockchain:false, c2pa:false },
-  silber:  { name:'Silber',  emoji:'🥈', color:'#C0C0C0', verify:3, watermark:true,  blockchain:true,  c2pa:false },
-  gold:    { name:'Gold',    emoji:'🥇', color:'#FFD700', verify:4, watermark:true,  blockchain:true,  c2pa:true },
-  platin:  { name:'Platin',  emoji:'💎', color:'#00D4FF', verify:5, watermark:true,  blockchain:true,  c2pa:true },
-  diamant: { name:'Diamant', emoji:'💠', color:'#93C5FD', verify:6, watermark:true,  blockchain:true,  c2pa:true },
-};
+const GOLD = "#C9A84C";
+const CYAN = "#00F0FF";
+const BG = "#03050A";
 
-const VERIFY_LEVELS = [
-  { level:1, name:'Basis',           color:'#6B7280', desc:'E-Mail verifiziert',                     icon:'✉️', plan:'gratis' },
-  { level:2, name:'Bronze Creator',  color:'#CD7F32', desc:'Wasserzeichen + Basis-Schutz',            icon:'🥉', plan:'bronze' },
-  { level:3, name:'Silber Creator',  color:'#C0C0C0', desc:'Blockchain-Zeitstempel aktiviert',        icon:'🥈', plan:'silber' },
-  { level:4, name:'Gold Creator',    color:'#FFD700', desc:'C2PA 2.3 + Vollverifizierung',            icon:'🥇', plan:'gold' },
-  { level:5, name:'Platin Creator',  color:'#00D4FF', desc:'Polygon + White-Label + Enterprise',      icon:'💎', plan:'platin' },
-  { level:6, name:'Diamant Creator', color:'#93C5FD', desc:'Höchste Stufe · RealSync Certified',      icon:'💠', plan:'diamant' },
+const PLANS = [
+  {
+    id: "gratis", name: "Gratis", emoji: "🆓", price: 0,
+    color: "#6B7280", glow: "#6B728044",
+    tagline: "Für immer kostenlos — kein Limit",
+    verifyLevel: 1,
+    apps: ["CreatorSeal Basis", "Creator-Profil", "QR-Code", "Barcode"],
+    social: ["YouTube (Anzeige)", "TikTok (Anzeige)"],
+    features: [
+      { icon: "👤", text: "Öffentliches Creator-Profil", on: true },
+      { icon: "📱", text: "QR-Code + Barcode Generator", on: true },
+      { icon: "✉️", text: "E-Mail Verifikation", on: true },
+      { icon: "🛡", text: "RealSync Basis-Badge", on: true },
+      { icon: "🌐", text: "realsyncdynamics.de/creator/du", on: true },
+      { icon: "📊", text: "Basis-Analytics", on: true },
+      { icon: "💧", text: "Wasserzeichen", on: false },
+      { icon: "⛓", text: "Blockchain-Zeitstempel", on: false },
+      { icon: "🔐", text: "C2PA 2.3 Signatur", on: false },
+      { icon: "🎨", text: "Custom Design", on: false },
+      { icon: "📡", text: "Social Media API", on: false },
+      { icon: "🌍", text: "Custom Domain", on: false },
+    ],
+    highlight: false,
+  },
+  {
+    id: "bronze", name: "Bronze", emoji: "🥉", price: 19,
+    color: "#CD7F32", glow: "#CD7F3244",
+    tagline: "Erster echter Schutz",
+    verifyLevel: 2,
+    apps: ["CreatorSeal", "AdEngine", "Creator-Profil+", "QR Pro", "Barcode Pro"],
+    social: ["YouTube", "TikTok", "Instagram (Basic)"],
+    features: [
+      { icon: "👤", text: "Creator-Profil + Custom Bio", on: true },
+      { icon: "📱", text: "QR + Barcode (Download)", on: true },
+      { icon: "✉️", text: "E-Mail + Phone Verifikation", on: true },
+      { icon: "🛡", text: "Bronze Creator Badge", on: true },
+      { icon: "💧", text: "Unsichtbares Wasserzeichen", on: true },
+      { icon: "📊", text: "Analytics Dashboard", on: true },
+      { icon: "📡", text: "3 Social Media Plattformen", on: true },
+      { icon: "🎬", text: "Content Feed (3 Plattf.)", on: true },
+      { icon: "⛓", text: "Blockchain-Zeitstempel", on: false },
+      { icon: "🔐", text: "C2PA 2.3 Signatur", on: false },
+      { icon: "🎨", text: "Custom Design", on: false },
+      { icon: "🌍", text: "Custom Domain", on: false },
+    ],
+    highlight: false,
+  },
+  {
+    id: "silber", name: "Silber", emoji: "🥈", price: 49,
+    color: "#D4D4D4", glow: "#C0C0C055",
+    tagline: "Blockchain-Power für Creator",
+    verifyLevel: 3,
+    apps: ["CreatorSeal", "AdEngine", "DataCore", "SocialHub", "Analytics Pro", "Creator-Website"],
+    social: ["YouTube", "TikTok", "Instagram", "Facebook", "Twitch"],
+    features: [
+      { icon: "👤", text: "Creator-Profil + Custom Design", on: true },
+      { icon: "📱", text: "QR + Barcode + Embed-Code", on: true },
+      { icon: "✉️", text: "Multi-Faktor Verifikation", on: true },
+      { icon: "🛡", text: "Silber Creator Badge", on: true },
+      { icon: "💧", text: "Wasserzeichen (HD)", on: true },
+      { icon: "⛓", text: "Polygon Blockchain Timestamp", on: true },
+      { icon: "📡", text: "5 Social Media Plattformen", on: true },
+      { icon: "🎬", text: "Content Feed (alle Plattf.)", on: true },
+      { icon: "📊", text: "Erweiterte Analytics", on: true },
+      { icon: "🔐", text: "C2PA 2.3 Signatur", on: false },
+      { icon: "🎨", text: "Custom Domain", on: false },
+      { icon: "🌍", text: "White-Label", on: false },
+    ],
+    highlight: true,
+  },
+  {
+    id: "gold", name: "Gold", emoji: "🥇", price: 99,
+    color: "#FFD700", glow: "#FFD70055",
+    tagline: "Vollständiger Creator-Schutz",
+    verifyLevel: 4,
+    apps: ["Alle 16 Apps", "Creator-Website Pro", "Analytics Enterprise", "AdEngine Pro", "SocialHub", "AutoOS"],
+    social: ["YouTube", "TikTok", "Instagram", "Facebook", "Twitch", "X/Twitter"],
+    features: [
+      { icon: "👤", text: "Creator-Profil + Shop-Integration", on: true },
+      { icon: "📱", text: "QR + NFC-Tag Support", on: true },
+      { icon: "✉️", text: "Biometrische Verifikation", on: true },
+      { icon: "🛡", text: "Gold Creator Badge", on: true },
+      { icon: "💧", text: "Wasserzeichen (4K)", on: true },
+      { icon: "⛓", text: "Polygon + Zeitstempel Chain", on: true },
+      { icon: "🔐", text: "C2PA 2.3 Vollstandard", on: true },
+      { icon: "📡", text: "Alle 6 Social Plattformen", on: true },
+      { icon: "🎬", text: "Content Feed + Auto-Posting", on: true },
+      { icon: "📊", text: "Pro Analytics + CSV Export", on: true },
+      { icon: "🎨", text: "Custom Design + Themes", on: true },
+      { icon: "🌍", text: "Custom Domain", on: false },
+    ],
+    highlight: false,
+  },
+  {
+    id: "platin", name: "Platin", emoji: "💎", price: 199,
+    color: "#00D4FF", glow: "#00D4FF44",
+    tagline: "Enterprise-Creator · White-Label",
+    verifyLevel: 5,
+    apps: ["Alle 16 Apps", "White-Label", "API unbegrenzt", "Custom Integrationen", "Team bis 25"],
+    social: ["Alle Plattformen", "API-Direct Access", "Webhooks", "Auto-Posting"],
+    features: [
+      { icon: "👤", text: "Vollständige eigene Webseite", on: true },
+      { icon: "📱", text: "NFC + QR + Barcode Bundle", on: true },
+      { icon: "✉️", text: "Enterprise Verifikation", on: true },
+      { icon: "🛡", text: "Platin Badge + Polygon NFT", on: true },
+      { icon: "💧", text: "Wasserzeichen (8K + Video)", on: true },
+      { icon: "⛓", text: "Multi-Chain Blockchain", on: true },
+      { icon: "🔐", text: "C2PA 2.3 + Rechtsgutachten", on: true },
+      { icon: "📡", text: "Alle Plattformen + Webhooks", on: true },
+      { icon: "🎬", text: "Content Hub + KI-Planung", on: true },
+      { icon: "🌍", text: "Custom Domain (eigene-domain.de)", on: true },
+      { icon: "🎨", text: "White-Label Creator-Plattform", on: true },
+      { icon: "🤖", text: "KI-Content-Assistent", on: true },
+    ],
+    highlight: false,
+  },
+  {
+    id: "diamant", name: "Diamant", emoji: "💠", price: 499,
+    color: "#93C5FD", glow: "#93C5FD44",
+    tagline: "Höchste Stufe · Alles inklusive",
+    verifyLevel: 6,
+    apps: ["Alles aus Platin", "On-Premise", "Custom KI-Training", "Dedicated Manager"],
+    social: ["Alle Plattformen", "Enterprise APIs", "Custom Integrationen", "SLA 99.99%"],
+    features: [
+      { icon: "👤", text: "Custom Creator-App (iOS/Android)", on: true },
+      { icon: "📱", text: "Physische Creator-Card (NFC)", on: true },
+      { icon: "✉️", text: "Rechtliche Absicherung", on: true },
+      { icon: "🛡", text: "Diamant Badge + Exklusiv-Status", on: true },
+      { icon: "💧", text: "Wasserzeichen + Steganografie", on: true },
+      { icon: "⛓", text: "Eigene Blockchain-Node", on: true },
+      { icon: "🔐", text: "C2PA 2.3 + Notarielle Bestätigung", on: true },
+      { icon: "📡", text: "Alle Plattformen + Custom APIs", on: true },
+      { icon: "🎬", text: "KI-Videoschnitt + Auto-Publishing", on: true },
+      { icon: "🌍", text: "Multi-Domain + CDN weltweit", on: true },
+      { icon: "🎨", text: "Custom App White-Label", on: true },
+      { icon: "🤖", text: "Dedicated KI + Account Manager", on: true },
+    ],
+    highlight: false,
+  },
 ];
 
-const SOCIALS = [
-  { id:'youtube',   name:'YouTube',    icon:'▶️',  color:'#FF0000', bg:'#1a0000', api:'YouTube Data API v3 (kostenlos)',  features:['Abonnenten','Video-Stats','Kanal-Info','Thumbnails','Analytics'] },
-  { id:'tiktok',    name:'TikTok',     icon:'🎵',  color:'#00f2ea', bg:'#001a1a', api:'TikTok Display API (kostenlos)',   features:['Profil-Info','Letzte Videos','Follower','Video-Embed'] },
-  { id:'instagram', name:'Instagram',  icon:'📸',  color:'#E1306C', bg:'#1a0010', api:'Instagram Basic Display API',      features:['Profil','Medien','Follower','Reels','Bio'] },
-  { id:'facebook',  name:'Facebook',   icon:'👥',  color:'#1877F2', bg:'#00081a', api:'Facebook Graph API (kostenlos)',   features:['Page-Info','Posts','Fans','Insights'] },
-  { id:'twitch',    name:'Twitch',     icon:'🟣',  color:'#9147FF', bg:'#0d0015', api:'Twitch Helix API (kostenlos)',     features:['Channel','Stream-Status','Follower','Clips'] },
-  { id:'x',         name:'X / Twitter',icon:'✖️',  color:'#FFFFFF', bg:'#111',    api:'Twitter API v2 (Basic free)',      features:['Profil','Tweets','Follower'] },
-];
-
-const STATS: Record<string,{followers:string,posts:string,views:string,engagement:string}> = {
-  youtube:   {followers:'12.4K',posts:'87', views:'1.2M', engagement:'8.4%'},
-  tiktok:    {followers:'34.7K',posts:'142',views:'5.8M', engagement:'12.1%'},
-  instagram: {followers:'8.9K', posts:'203',views:'420K', engagement:'6.7%'},
-  facebook:  {followers:'3.2K', posts:'45', views:'87K',  engagement:'3.2%'},
-  twitch:    {followers:'1.8K', posts:'28', views:'156K', engagement:'15.4%'},
-  x:         {followers:'5.6K', posts:'834',views:'980K', engagement:'4.8%'},
+const APPS_BY_PLAN = {
+  gratis: ["CreatorSeal", "Creator-Profil", "QR-Code"],
+  bronze: ["CreatorSeal", "AdEngine", "Creator-Profil+", "QR Pro"],
+  silber: ["CreatorSeal", "AdEngine", "DataCore", "SocialHub", "Creator-Website", "Analytics"],
+  gold:   ["CreatorSeal", "AdEngine", "DataCore", "SocialHub", "Creator-Website", "Analytics", "AutoOS", "FlowSync", "Optimus", "EduLab", "ReviewRadar", "ChurnRescue", "WaitlistKit", "Handwerk", "Gate", "Sicherheit"],
+  platin: ["Alle 16 Apps", "White-Label", "API-Hub", "Enterprise-Tools", "Team-Manager", "Custom-Integration"],
+  diamant:["Alle 16 Apps", "Custom iOS App", "Custom Android App", "On-Premise", "Eigene Blockchain-Node", "Dedicated Support"],
 };
 
-function QR({value, size=160}:{value:string,size?:number}) {
-  const cells=21, cs=size/cells;
-  const h=value.split('').reduce((a,c)=>((a<<5)-a+c.charCodeAt(0))|0,0);
+const SOCIAL_PLATFORMS = [
+  { id: "youtube",   name: "YouTube",   icon: "▶", color: "#FF0000", followers: "12.4K", videos: "87",  views: "1.2M",  engagement: "8.4%" },
+  { id: "tiktok",    name: "TikTok",    icon: "♪", color: "#00F2EA", followers: "34.7K", videos: "142", views: "5.8M",  engagement: "12.1%" },
+  { id: "instagram", name: "Instagram", icon: "◈", color: "#E1306C", followers: "8.9K",  videos: "203", views: "420K",  engagement: "6.7%" },
+  { id: "facebook",  name: "Facebook",  icon: "f", color: "#1877F2", followers: "3.2K",  videos: "45",  views: "87K",   engagement: "3.2%" },
+  { id: "twitch",    name: "Twitch",    icon: "◉", color: "#9147FF", followers: "1.8K",  videos: "28",  views: "156K",  engagement: "15.4%" },
+  { id: "x",         name: "X / Twitter",icon:"✕", color: "#FFFFFF", followers: "5.6K",  videos: "834", views: "980K",  engagement: "4.8%" },
+];
+
+const CONTENT_FEED = [
+  { platform: "tiktok",    title: "CreatorSeal Demo #fyp",  views: "156K",  thumb: "🎵", date: "vor 5T",  verified: true,  wm: true  },
+  { platform: "youtube",   title: "RealSync Dynamics Intro",views: "24.3K", thumb: "🎬", date: "vor 2T",  verified: true,  wm: true  },
+  { platform: "youtube",   title: "Tutorial: C2PA 2.3",     views: "8.7K",  thumb: "📹", date: "vor 1W",  verified: true,  wm: true  },
+  { platform: "tiktok",    title: "Blockchain für Creator", views: "89K",   thumb: "⛓", date: "vor 1W",  verified: true,  wm: true  },
+  { platform: "instagram", title: "Behind the Scenes",      views: "12K",   thumb: "📸", date: "vor 2W",  verified: false, wm: false },
+  { platform: "tiktok",    title: "Tech Stack 2026",        views: "234K",  thumb: "💻", date: "vor 1M",  verified: true,  wm: true  },
+];
+
+function QR({ size = 120, color = "#000" }) {
+  const cells = 21, cs = size / cells;
+  const h = 0xA7F3D0;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <rect width={size} height={size} fill="white"/>
-      {Array.from({length:cells},(_,r)=>Array.from({length:cells},(_,c)=>{
-        const fp=(r<7&&c<7)||(r<7&&c>=cells-7)||(r>=cells-7&&c<7);
-        const on=fp||((h^(r*31+c*17))&1)===1;
-        return on?<rect key={`${r}-${c}`} x={c*cs} y={r*cs} width={cs} height={cs} fill="#000"/>:null;
-      }))}
+      <rect width={size} height={size} fill="white" rx="4"/>
+      {Array.from({ length: cells }, (_, r) =>
+        Array.from({ length: cells }, (_, c) => {
+          const fp = (r < 7 && c < 7) || (r < 7 && c >= cells - 7) || (r >= cells - 7 && c < 7);
+          const on = fp || ((h ^ (r * 31 + c * 17)) & 1) === 1;
+          return on ? <rect key={`${r}-${c}`} x={c*cs} y={r*cs} width={cs} height={cs} fill={color}/> : null;
+        })
+      )}
     </svg>
   );
 }
 
-function Barcode({value}:{value:string}) {
-  let x=4;
+function Barcode({ value = "RS-2026-D5T8K1", height = 48 }) {
+  let x = 6;
+  const bars = [];
+  for (let i = 0; i < value.length; i++) {
+    const w = (value.charCodeAt(i) % 3 + 1) * 2.4;
+    const gap = i % 4 === 0 ? 3.5 : 1.5;
+    bars.push(<rect key={i} x={x} y={4} width={w} height={height - 16} fill="#111"/>);
+    x += w + gap;
+  }
   return (
-    <svg width="240" height="52" viewBox="0 0 240 52">
-      <rect width="240" height="52" fill="white"/>
-      {value.split('').map((c,i)=>{
-        const w=(c.charCodeAt(0)%3+1)*2, gap=i%4===0?3:1;
-        const el=<rect key={i} x={x} y={4} width={w} height={38} fill="#000"/>;
-        x+=w+gap; return el;
-      })}
-      <text x="120" y="50" textAnchor="middle" fontSize="6" fontFamily="monospace" fill="#000">{value}</text>
+    <svg width="260" height={height} viewBox={`0 0 260 ${height}`}>
+      <rect width="260" height={height} fill="white" rx="4"/>
+      {bars}
+      <text x="130" y={height - 2} textAnchor="middle" fontSize="7" fontFamily="monospace" fill="#444">{value}</text>
+    </svg>
+  );
+}
+
+function Sparkline({ data, color }) {
+  const max = Math.max(...data), min = Math.min(...data);
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * 100;
+    const y = 30 - ((v - min) / (max - min)) * 28;
+    return `${x},${y}`;
+  }).join(" ");
+  return (
+    <svg width="100" height="32" viewBox="0 0 100 32">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx={pts.split(" ").at(-1).split(",")[0]} cy={pts.split(" ").at(-1).split(",")[1]} r="3" fill={color}/>
     </svg>
   );
 }
 
 export default function CreatorSealDashboard() {
-  const [plan, setPlan] = useState<keyof typeof PLANS>('silber');
-  const [tab, setTab] = useState<'overview'|'verify'|'social'|'content'|'profile'|'website'>('overview');
-  const [socials, setSocials] = useState<Record<string,boolean>>({youtube:true,tiktok:true,instagram:false,facebook:false,twitch:false,x:false});
+  const [activePlan, setActivePlan] = useState("gold");
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [connectedSocials, setConnectedSocials] = useState({ youtube: true, tiktok: true, instagram: true, facebook: false, twitch: false, x: false });
   const [showQR, setShowQR] = useState(false);
-  const username = 'dominik_steiner';
-  const code = 'RS-2026-D5T8K1';
-  const p = PLANS[plan];
-  const vl = p.verify;
-  const totalF = Object.entries(socials).filter(([,v])=>v).reduce((s,[k])=>s+parseFloat(STATS[k].followers)*1000,0);
+  const [ticker, setTicker] = useState(0);
+  const plan = PLANS.find(p => p.id === activePlan);
+  const vl = plan.verifyLevel;
+
+  useEffect(() => {
+    const t = setInterval(() => setTicker(v => v + 1), 2800);
+    return () => clearInterval(t);
+  }, []);
+
+  const totalFollowers = SOCIAL_PLATFORMS
+    .filter(s => connectedSocials[s.id])
+    .reduce((sum, s) => sum + parseFloat(s.followers) * 1000, 0);
+
+  const tabs = [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "plans",     label: "Pakete & Preise" },
+    { id: "profile",   label: "Creator Profil" },
+    { id: "verify",    label: "Verifikation" },
+    { id: "social",    label: "Social Media" },
+    { id: "apps",      label: "Apps & Tools" },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* HEADER */}
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-gray-500 text-sm hover:text-white">← RealSync</Link>
-          <span className="text-gray-700">|</span>
-          <span className="font-black text-lg" style={{color:p.color}}>🛡 CreatorSeal</span>
-          <span className="text-xs font-bold px-2 py-0.5 rounded-full border" style={{borderColor:p.color,color:p.color}}>{p.emoji} {p.name}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-gray-400 bg-gray-800 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>{code}
+    <div style={{ fontFamily: "'Syne', 'DM Mono', monospace", background: BG, color: "#E4E6EF", minHeight: "100vh", overflowX: "hidden" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap');
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0d14; }
+        ::-webkit-scrollbar-thumb { background: #C9A84C44; border-radius: 2px; }
+        * { box-sizing: border-box; }
+        @keyframes pulse { 0%,100%{opacity:.9} 50%{opacity:.4} }
+        @keyframes glow { 0%,100%{box-shadow:0 0 20px var(--gc)} 50%{box-shadow:0 0 40px var(--gc)} }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        .plan-card { transition: all .25s cubic-bezier(.34,1.56,.64,1); }
+        .plan-card:hover { transform: translateY(-6px) scale(1.01); }
+        .btn-hover { transition: all .15s; }
+        .btn-hover:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        .social-card { transition: all .2s; }
+        .social-card:hover { transform: scale(1.02); }
+        .tab-btn { transition: all .15s; }
+      `}</style>
+
+      {/* ── HEADER ── */}
+      <div style={{ background: "rgba(3,5,10,.97)", borderBottom: `1px solid ${GOLD}22`, padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 52, position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <div style={{ width: 12, height: 12, border: `1.5px solid ${GOLD}`, transform: "rotate(45deg)", position: "relative" }}>
+              <div style={{ position: "absolute", inset: 2, background: GOLD }}/>
+            </div>
+            <span style={{ fontWeight: 800, fontSize: 13, letterSpacing: ".04em" }}>RealSync<span style={{ color: GOLD }}>Dynamics</span></span>
+          </div>
+          <span style={{ color: "#2A3348", fontSize: 13 }}>|</span>
+          <span style={{ fontWeight: 800, fontSize: 14, color: plan.color }}>🛡 CreatorSeal</span>
+          <span style={{ fontSize: 10, fontFamily: "DM Mono,monospace", letterSpacing: ".08em", padding: "2px 8px", border: `1px solid ${plan.color}60`, color: plan.color, borderRadius: 2 }}>
+            {plan.emoji} {plan.name.toUpperCase()}
           </span>
-          <button onClick={()=>setShowQR(true)} className="text-xs font-bold px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 rounded-full hover:bg-cyan-500/20">📱 QR</button>
-          <Link href="/pricing?app=creatorseal" className="text-xs font-bold px-3 py-1.5 rounded-full" style={{background:p.color,color:'#000'}}>Upgrade</Link>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, background: "#0B0F18", border: "1px solid #1a2238", borderRadius: 20, padding: "4px 12px" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#00FF88", animation: "pulse 1.2s ease infinite" }}/>
+            <span style={{ fontFamily: "DM Mono,monospace", fontSize: 10, color: "#7A8498" }}>RS-2026-D5T8K1</span>
+          </div>
+          <button className="btn-hover" onClick={() => setShowQR(true)}
+            style={{ fontSize: 10, fontFamily: "DM Mono,monospace", fontWeight: 700, padding: "5px 12px", background: `${CYAN}15`, border: `1px solid ${CYAN}40`, color: CYAN, borderRadius: 2, cursor: "pointer", letterSpacing: ".08em" }}>
+            QR-CODE
+          </button>
+          <button className="btn-hover" onClick={() => setActiveTab("plans")}
+            style={{ fontSize: 10, fontFamily: "DM Mono,monospace", fontWeight: 700, padding: "5px 14px", background: plan.color, color: "#000", border: "none", borderRadius: 2, cursor: "pointer", letterSpacing: ".08em" }}>
+            UPGRADE {plan.emoji}
+          </button>
         </div>
       </div>
 
-      {/* PLAN SWITCHER */}
-      <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-2 flex items-center gap-2 overflow-x-auto">
-        <span className="text-xs text-gray-500 whitespace-nowrap">Demo:</span>
-        {(Object.keys(PLANS) as (keyof typeof PLANS)[]).map(k=>(
-          <button key={k} onClick={()=>setPlan(k)}
-            className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap transition-all ${plan===k?'opacity-100':'opacity-35 hover:opacity-60'}`}
-            style={{background:PLANS[k].color+'20',border:`1px solid ${PLANS[k].color}50`,color:PLANS[k].color}}>
-            {PLANS[k].emoji} {PLANS[k].name}
+      {/* ── PLAN SWITCHER ── */}
+      <div style={{ background: "#070A12", borderBottom: "1px solid #0F1520", padding: "8px 20px", display: "flex", alignItems: "center", gap: 6, overflowX: "auto" }}>
+        <span style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".12em", textTransform: "uppercase", whiteSpace: "nowrap" }}>Plan:</span>
+        {PLANS.map(p => (
+          <button key={p.id} onClick={() => setActivePlan(p.id)} className="btn-hover"
+            style={{ fontSize: 9, fontFamily: "DM Mono,monospace", fontWeight: 700, padding: "4px 10px", borderRadius: 2, cursor: "pointer", whiteSpace: "nowrap", letterSpacing: ".07em",
+              background: activePlan === p.id ? p.color + "22" : "transparent",
+              border: `1px solid ${p.color}${activePlan === p.id ? "80" : "30"}`,
+              color: activePlan === p.id ? p.color : "#4A5568",
+              opacity: activePlan === p.id ? 1 : .5 }}>
+            {p.emoji} {p.name.toUpperCase()}
           </button>
         ))}
       </div>
 
-      {/* TABS */}
-      <div className="flex border-b border-gray-800 overflow-x-auto bg-gray-900/20">
-        {(['overview','verify','social','content','profile','website'] as const).map(t=>(
-          <button key={t} onClick={()=>setTab(t)}
-            className={`px-4 py-3 text-xs font-bold uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${tab===t?'border-cyan-400 text-cyan-400':'border-transparent text-gray-500 hover:text-gray-300'}`}>
-            {({overview:'📊 Übersicht',verify:'🔐 Verifikation',social:'📱 Social',content:'🎬 Content',profile:'👤 Profil',website:'🌐 Website'})[t]}
+      {/* ── TABS ── */}
+      <div style={{ background: "rgba(7,10,18,.95)", borderBottom: "1px solid #0F1520", padding: "0 20px", display: "flex", overflowX: "auto" }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id)} className="tab-btn"
+            style={{ padding: "12px 16px", fontSize: 10, fontFamily: "DM Mono,monospace", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", cursor: "pointer", background: "transparent", border: "none", whiteSpace: "nowrap",
+              borderBottom: activeTab === t.id ? `2px solid ${plan.color}` : "2px solid transparent",
+              color: activeTab === t.id ? plan.color : "#4A5568" }}>
+            {t.label}
           </button>
         ))}
       </div>
 
-      <div className="max-w-6xl mx-auto p-4 space-y-4">
+      <div style={{ padding: "20px", maxWidth: 1200, margin: "0 auto" }}>
 
-        {/* ── OVERVIEW ── */}
-        {tab==='overview'&&<>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* ════════ DASHBOARD ════════ */}
+        {activeTab === "dashboard" && <>
+          {/* Stats Row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
             {[
-              {v:`${vl}/6`,l:'Verifikationsstufe',c:p.color,s:p.emoji+' '+p.name},
-              {v:`${(totalF/1000).toFixed(1)}K`,l:'Total Follower',c:'#00C853',s:'↑ alle Plattformen'},
-              {v:`${Object.values(socials).filter(Boolean).length}/6`,l:'Plattformen',c:'#3B82F6',s:'Social Media'},
-              {v:'98.2',l:'Trust Score',c:'#F9AB00',s:'⭐ Verifiziert'},
-            ].map(s=>(
-              <div key={s.l} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                <div className="text-2xl font-black" style={{color:s.c}}>{s.v}</div>
-                <div className="text-xs text-gray-500 mt-1">{s.l}</div>
-                <div className="text-xs mt-1" style={{color:s.c}}>{s.s}</div>
+              { v: `${vl}/6`, l: "Verifikationsstufe", c: plan.color, sub: `${plan.emoji} ${plan.name}`, spark: [1,2,2,3,3,3,vl] },
+              { v: `${(totalFollowers/1000).toFixed(1)}K`, l: "Total Follower", c: "#00C853", sub: "↑ alle Plattformen", spark: [22,28,31,35,38,42,48] },
+              { v: "98.2", l: "Trust Score", c: GOLD, sub: "⭐ Verifiziert", spark: [88,91,93,94,96,97,98] },
+              { v: `${Object.values(connectedSocials).filter(Boolean).length}/6`, l: "Plattformen", c: CYAN, sub: "Social Media", spark: [2,2,3,3,3,4,Object.values(connectedSocials).filter(Boolean).length] },
+            ].map((s, i) => (
+              <div key={i} style={{ background: "#0B0F18", border: `1px solid ${s.c}22`, borderRadius: 8, padding: "16px 18px", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: 0, right: 0, opacity: .4 }}>
+                  <Sparkline data={s.spark} color={s.c}/>
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: s.c, lineHeight: 1 }}>{s.v}</div>
+                <div style={{ fontSize: 10, fontFamily: "DM Mono,monospace", color: "#4A5568", marginTop: 4, letterSpacing: ".08em", textTransform: "uppercase" }}>{s.l}</div>
+                <div style={{ fontSize: 9, color: s.c, marginTop: 3, opacity: .8 }}>{s.sub}</div>
               </div>
             ))}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
             {/* Creator Card */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <div className="text-xs text-gray-500 uppercase tracking-widest mb-3">// Creator Card</div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl border-2" style={{background:p.color+'20',borderColor:p.color}}>🎬</div>
+            <div style={{ background: "#0B0F18", border: `1px solid ${plan.color}30`, borderRadius: 8, padding: 18, position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, right: 0, width: 200, height: 200, background: `radial-gradient(circle, ${plan.color}08, transparent 70%)`, pointerEvents: "none" }}/>
+              <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 14 }}>// Creator Card</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+                <div style={{ width: 64, height: 64, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, border: `2px solid ${plan.color}`, background: `${plan.color}15`, flexShrink: 0, animation: "float 3s ease infinite" }}>🎬</div>
                 <div>
-                  <div className="font-black">Dominik Steiner</div>
-                  <div className="text-xs text-gray-400 font-mono">@{username}</div>
-                  <div className="flex gap-1 mt-1 flex-wrap">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{background:p.color,color:'#000'}}>{p.emoji} {p.name}</span>
-                    {p.blockchain&&<span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">⛓</span>}
-                    {p.c2pa&&<span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">C2PA</span>}
+                  <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 2 }}>Dominik Steiner</div>
+                  <div style={{ fontSize: 10, fontFamily: "DM Mono,monospace", color: "#4A5568", marginBottom: 6 }}>@dominik_steiner · Tech & Startup</div>
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 2, background: plan.color, color: "#000" }}>{plan.emoji} {plan.name.toUpperCase()}</span>
+                    {vl >= 3 && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 2, background: "#7C3AED22", border: "1px solid #7C3AED50", color: "#A78BFA" }}>⛓ CHAIN</span>}
+                    {vl >= 4 && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 2, background: "#0EA5E922", border: "1px solid #0EA5E950", color: "#38BDF8" }}>C2PA</span>}
+                    {vl >= 2 && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 2, background: "#00C85322", border: "1px solid #00C85350", color: "#00C853" }}>💧 WM</span>}
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-center mb-4">
-                {['youtube','tiktok','instagram'].map(k=>(
-                  <div key={k} className="bg-gray-800 rounded-lg p-2">
-                    <div className="font-black text-sm" style={{color:SOCIALS.find(s=>s.id===k)?.color}}>{STATS[k].followers}</div>
-                    <div className="text-xs text-gray-500 capitalize">{k==='youtube'?'YT':k==='tiktok'?'TT':'IG'}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                {[["▶ YouTube", "12.4K", "#FF0000"], ["♪ TikTok", "34.7K", "#00F2EA"], ["◈ Instagram", "8.9K", "#E1306C"]].map(([n,v,c]) => (
+                  <div key={n} style={{ background: "#141C28", borderRadius: 6, padding: "8px 6px", textAlign: "center", border: `1px solid ${c}25` }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: c }}>{v}</div>
+                    <div style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: "#4A5568", marginTop: 2 }}>{n}</div>
                   </div>
                 ))}
               </div>
-              <Link href={`/creator/${username}`} className="block text-center text-xs font-bold py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20">
-                🌐 Öffentliches Profil →
-              </Link>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "8px 0 0", borderTop: "1px solid #141C28" }}>
+                <span style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>Neuhaus am Rennweg 🇩🇪</span>
+                <span style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: plan.color }}>realsyncdynamics.de/creator/dominik</span>
+              </div>
             </div>
 
             {/* QR + Barcode */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <div className="text-xs text-gray-500 uppercase tracking-widest mb-3">// Creator Code</div>
-              <div className="flex gap-4">
-                <div className="bg-white rounded-lg p-2 flex-shrink-0"><QR value={`https://realsyncdynamics.de/creator/${username}`} size={100}/></div>
-                <div className="flex-1">
-                  <div className="text-xs text-gray-400 mb-2">QR → dein verifiziertes Profil</div>
-                  <div className="bg-white rounded p-2 mb-2"><Barcode value={code}/></div>
-                  <div className="font-mono text-xs text-gray-400">{code}</div>
+            <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18 }}>
+              <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 14 }}>// Creator Code · Verifikationsnachweis</div>
+              <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 12 }}>
+                <div style={{ background: "white", borderRadius: 8, padding: 8, flexShrink: 0, boxShadow: `0 0 20px ${plan.color}22` }}>
+                  <QR size={100} color={plan.color !== "#6B7280" ? "#000" : "#000"}/>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, color: "#4A5568", marginBottom: 8, lineHeight: 1.5 }}>Dein Creator-QR führt direkt zu deinem verifizierten Profil auf allen Plattformen.</div>
+                  <div style={{ background: "white", borderRadius: 6, padding: "8px 10px" }}>
+                    <Barcode value="RS-2026-D5T8K1" height={44}/>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-4">
-                <button onClick={()=>setShowQR(true)} className="text-xs font-bold py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400">📥 Herunterladen</button>
-                <button className="text-xs font-bold py-2 rounded-lg bg-gray-800 border border-gray-700 text-gray-400">📋 Kopieren</button>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <button className="btn-hover" onClick={() => setShowQR(true)}
+                  style={{ padding: "8px 0", borderRadius: 4, fontSize: 9, fontFamily: "DM Mono,monospace", fontWeight: 700, letterSpacing: ".08em", cursor: "pointer", background: `${GOLD}15`, border: `1px solid ${GOLD}40`, color: GOLD }}>
+                  📥 HERUNTERLADEN
+                </button>
+                <button className="btn-hover"
+                  style={{ padding: "8px 0", borderRadius: 4, fontSize: 9, fontFamily: "DM Mono,monospace", fontWeight: 700, letterSpacing: ".08em", cursor: "pointer", background: "#141C28", border: "1px solid #1a2238", color: "#4A5568" }}>
+                  📋 KOPIEREN
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Feature Grid */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <div className="text-xs text-gray-500 uppercase tracking-widest mb-4">// Freigeschaltete Features · {p.name}</div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {[
-                {name:'Creator-Profil',icon:'👤',on:true},
-                {name:'QR-Code + Barcode',icon:'📱',on:true},
-                {name:'E-Mail Verifikation',icon:'✉️',on:true},
-                {name:'Wasserzeichen',icon:'💧',on:p.watermark},
-                {name:'Blockchain-Timestamp',icon:'⛓',on:p.blockchain},
-                {name:'C2PA 2.3 Signatur',icon:'🔐',on:p.c2pa},
-                {name:'Social Media APIs',icon:'📡',on:vl>=2},
-                {name:'Analytics Dashboard',icon:'📊',on:vl>=3},
-                {name:'Custom Domain',icon:'🌐',on:vl>=5},
-                {name:'White-Label Profil',icon:'🎨',on:vl>=5},
-                {name:'Polygon NFT-Badge',icon:'💎',on:vl>=5},
-                {name:'RealSync Certified',icon:'🏆',on:vl>=6},
-              ].map(f=>(
-                <div key={f.name} className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs ${f.on?'bg-green-500/5 border-green-500/20 text-green-300':'bg-gray-800/50 border-gray-700 text-gray-600'}`}>
-                  <span>{f.icon}</span><span className="flex-1">{f.name}</span>
-                  <span>{f.on?'✓':'🔒'}</span>
-                </div>
-              ))}
+          {/* Social Media Row */}
+          <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase" }}>// Social Media · Aggregiert</div>
+              <button className="btn-hover" onClick={() => setActiveTab("social")}
+                style={{ fontSize: 8, fontFamily: "DM Mono,monospace", fontWeight: 700, padding: "3px 10px", cursor: "pointer", background: "transparent", border: "1px solid #1a2238", color: "#4A5568", borderRadius: 2 }}>
+                ALLE VERWALTEN →
+              </button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
+              {SOCIAL_PLATFORMS.map(s => {
+                const conn = connectedSocials[s.id];
+                const locked = vl < 2;
+                return (
+                  <div key={s.id} className="social-card" onClick={() => !locked && setConnectedSocials(prev => ({ ...prev, [s.id]: !prev[s.id] }))}
+                    style={{ padding: "12px 8px", borderRadius: 6, textAlign: "center", cursor: locked ? "default" : "pointer",
+                      background: conn && !locked ? s.color + "12" : "#141C28",
+                      border: `1px solid ${conn && !locked ? s.color + "40" : "#1a2238"}`,
+                      opacity: locked ? .35 : 1 }}>
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>{s.icon}</div>
+                    <div style={{ fontSize: 8, fontWeight: 700, color: conn && !locked ? s.color : "#4A5568", marginBottom: 3 }}>{s.name}</div>
+                    {conn && !locked ? (
+                      <>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: s.color }}>{s.followers}</div>
+                        <div style={{ fontSize: 7, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>Follower</div>
+                        <div style={{ fontSize: 8, color: "#00C853", marginTop: 2 }}>{s.engagement}</div>
+                      </>
+                    ) : (
+                      <div style={{ fontSize: 8, color: locked ? "#1a2238" : "#4A5568", fontFamily: "DM Mono,monospace" }}>{locked ? "🔒" : "+ Verbinden"}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Content Feed */}
+          <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18 }}>
+            <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 14 }}>// Neuester Content · Alle Plattformen</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
+              {CONTENT_FEED.map((c, i) => {
+                const sp = SOCIAL_PLATFORMS.find(s => s.id === c.platform);
+                return (
+                  <div key={i} style={{ background: "#141C28", borderRadius: 6, overflow: "hidden", border: `1px solid ${sp.color}20`, cursor: "pointer" }} className="social-card">
+                    <div style={{ height: 70, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, background: sp.color + "10" }}>{c.thumb}</div>
+                    <div style={{ padding: "8px 7px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 4 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: sp.color }}>{sp.icon}</span>
+                        {c.verified && vl >= 2 && <span style={{ fontSize: 7, color: "#00C853", marginLeft: "auto" }}>✓</span>}
+                        {c.wm && vl >= 2 && <span style={{ fontSize: 7, color: "#38BDF8" }}>💧</span>}
+                      </div>
+                      <div style={{ fontSize: 8.5, fontWeight: 700, color: "#E4E6EF", lineHeight: 1.3, marginBottom: 4 }}>{c.title}</div>
+                      <div style={{ fontSize: 7.5, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>{c.views} · {c.date}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>}
 
-        {/* ── VERIFY ── */}
-        {tab==='verify'&&<>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <div className="text-xs text-gray-500 uppercase tracking-widest mb-5">// Verifikationsstufen — RealSync Creator Badges</div>
-            <div className="space-y-3">
-              {VERIFY_LEVELS.map(v=>{
-                const active=vl>=v.level, current=vl===v.level;
+        {/* ════════ PLANS ════════ */}
+        {activeTab === "plans" && <>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: CYAN, letterSpacing: ".2em", textTransform: "uppercase", marginBottom: 8 }}>// 6 Pakete · Von Gratis bis Enterprise</div>
+            <div style={{ fontSize: 30, fontWeight: 800, marginBottom: 6 }}>Gratis starten. <span style={{ background: `linear-gradient(90deg, ${GOLD}, ${CYAN})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Skalieren wenn bereit.</span></div>
+            <div style={{ fontSize: 12, color: "#4A5568" }}>Jederzeit upgraden · Monatlich kündbar · Kein Vertrag</div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10, marginBottom: 24 }}>
+            {PLANS.map(p => (
+              <div key={p.id} className="plan-card" onClick={() => setActivePlan(p.id)}
+                style={{ "--gc": p.glow, background: p.highlighted || activePlan === p.id ? `linear-gradient(160deg, ${p.color}15, #0B0F18)` : "#0B0F18",
+                  border: `1px solid ${p.color}${activePlan === p.id ? "80" : "30"}`,
+                  borderRadius: 10, padding: 16, cursor: "pointer", position: "relative",
+                  boxShadow: activePlan === p.id ? `0 0 30px ${p.glow}` : "none" }}>
+                {p.highlighted && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", fontSize: 8, fontFamily: "DM Mono,monospace", fontWeight: 700, padding: "2px 8px", background: p.color, color: "#000", borderRadius: 2, letterSpacing: ".1em", whiteSpace: "nowrap" }}>EMPFOHLEN</div>}
+                {activePlan === p.id && <div style={{ position: "absolute", top: -10, right: 8, fontSize: 8, fontFamily: "DM Mono,monospace", fontWeight: 700, padding: "2px 8px", background: "#00FF88", color: "#000", borderRadius: 2, letterSpacing: ".1em" }}>AKTIV</div>}
+
+                <div style={{ textAlign: "center", marginBottom: 14 }}>
+                  <div style={{ fontSize: 28, marginBottom: 4, animation: activePlan === p.id ? "float 3s ease infinite" : "none" }}>{p.emoji}</div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: p.color, marginBottom: 4 }}>{p.name}</div>
+                  {p.price === 0
+                    ? <div style={{ fontSize: 22, fontWeight: 800, color: "#E4E6EF" }}>Gratis</div>
+                    : <div><span style={{ fontSize: 22, fontWeight: 800, color: "#E4E6EF" }}>€{p.price}</span><span style={{ fontSize: 10, color: "#4A5568" }}>/Mo</span></div>}
+                  <div style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: "#4A5568", marginTop: 4, lineHeight: 1.4 }}>{p.tagline}</div>
+                </div>
+
+                {/* Verification Level */}
+                <div style={{ background: "#141C28", borderRadius: 4, padding: "6px 8px", marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <span style={{ fontSize: 7, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>VERIFY LEVEL</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: p.color }}>{p.verifyLevel}/6</span>
+                  </div>
+                  <div style={{ height: 3, background: "#1a2238", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${(p.verifyLevel/6)*100}%`, background: p.color, borderRadius: 2 }}/>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <div style={{ space: 2 }}>
+                  {p.features.slice(0, 8).map((f, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 0", fontSize: 8.5 }}>
+                      <span style={{ color: f.on ? "#00C853" : "#1a2238", flexShrink: 0 }}>{f.on ? "✓" : "✗"}</span>
+                      <span style={{ color: f.on ? "#9BA3AF" : "#2A3348" }}>{f.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button className="btn-hover" onClick={() => setActivePlan(p.id)}
+                  style={{ width: "100%", marginTop: 12, padding: "8px 0", borderRadius: 4, fontSize: 9, fontFamily: "DM Mono,monospace", fontWeight: 700, letterSpacing: ".08em", cursor: "pointer", border: "none",
+                    background: activePlan === p.id ? p.color : p.color + "22",
+                    color: activePlan === p.id ? "#000" : p.color }}>
+                  {activePlan === p.id ? "✓ AKTIV" : `${p.name.toUpperCase()} WÄHLEN`}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Feature Comparison Matrix */}
+          <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18, overflowX: "auto" }}>
+            <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 14 }}>// Feature Vergleich</div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 9 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", padding: "6px 8px", fontFamily: "DM Mono,monospace", color: "#4A5568", fontWeight: 400, borderBottom: "1px solid #141C28" }}>Feature</th>
+                  {PLANS.map(p => (
+                    <th key={p.id} style={{ padding: "6px 8px", textAlign: "center", fontWeight: 800, color: p.color, borderBottom: "1px solid #141C28", whiteSpace: "nowrap" }}>{p.emoji} {p.name}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Creator-Profil",         true,true,true,true,true,true],
+                  ["QR-Code + Barcode",       true,true,true,true,true,true],
+                  ["Wasserzeichen",           false,true,true,true,true,true],
+                  ["Blockchain-Timestamp",    false,false,true,true,true,true],
+                  ["C2PA 2.3",               false,false,false,true,true,true],
+                  ["Social APIs (3)",         false,true,false,false,false,false],
+                  ["Social APIs (5)",         false,false,true,false,false,false],
+                  ["Social APIs (alle 6)",    false,false,false,true,true,true],
+                  ["Analytics Dashboard",    false,true,true,true,true,true],
+                  ["Custom Domain",          false,false,false,false,true,true],
+                  ["White-Label",            false,false,false,false,true,true],
+                  ["Polygon NFT-Badge",      false,false,false,false,true,true],
+                  ["Custom App (iOS/Android)",false,false,false,false,false,true],
+                  ["Dedicated Manager",      false,false,false,false,false,true],
+                ].map(([name, ...vals]) => (
+                  <tr key={name as string} style={{ borderBottom: "1px solid #0d1117" }}>
+                    <td style={{ padding: "7px 8px", fontFamily: "DM Mono,monospace", color: "#7A8498" }}>{name as string}</td>
+                    {(vals as boolean[]).map((v, i) => (
+                      <td key={i} style={{ padding: "7px 8px", textAlign: "center" }}>
+                        <span style={{ fontSize: 11, color: v ? "#00C853" : "#1a2238" }}>{v ? "✓" : "✗"}</span>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>}
+
+        {/* ════════ PROFILE ════════ */}
+        {activeTab === "profile" && <>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            {/* Left: Editor */}
+            <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18 }}>
+              <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 14 }}>// Profil bearbeiten</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { l: "Anzeigename", v: "Dominik Steiner", t: "text" },
+                  { l: "Username", v: "dominik_steiner", t: "text" },
+                  { l: "Bio", v: "Creator, Developer & Gründer RealSync Dynamics 🚀", t: "ta" },
+                  { l: "Kategorie", v: "Tech & Startup", t: "text" },
+                  { l: "Ort", v: "Neuhaus am Rennweg 🇩🇪", t: "text" },
+                  { l: "Website", v: "realsyncdynamics.de", t: "url", locked: vl < 2 },
+                  { l: "Custom Domain", v: "dominik.creator.de", t: "url", locked: vl < 5 },
+                ].map(f => (
+                  <div key={f.l}>
+                    <label style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".1em", display: "block", marginBottom: 4 }}>
+                      {f.l} {f.locked && "🔒"}
+                    </label>
+                    {f.t === "ta"
+                      ? <textarea rows={2} defaultValue={f.v} disabled={f.locked}
+                          style={{ width: "100%", background: f.locked ? "#0a0d14" : "#141C28", border: "1px solid #1a2238", borderRadius: 4, padding: "8px 10px", fontSize: 10, color: f.locked ? "#2A3348" : "#E4E6EF", resize: "none", outline: "none", fontFamily: "Syne,sans-serif" }}/>
+                      : <input type={f.t} defaultValue={f.v} disabled={f.locked}
+                          style={{ width: "100%", background: f.locked ? "#0a0d14" : "#141C28", border: "1px solid #1a2238", borderRadius: 4, padding: "8px 10px", fontSize: 10, color: f.locked ? "#2A3348" : "#E4E6EF", outline: "none", fontFamily: "Syne,sans-serif" }}/>}
+                  </div>
+                ))}
+                <button className="btn-hover"
+                  style={{ width: "100%", padding: 10, borderRadius: 4, fontSize: 10, fontFamily: "DM Mono,monospace", fontWeight: 700, letterSpacing: ".1em", cursor: "pointer", background: plan.color, color: "#000", border: "none", marginTop: 4 }}>
+                  ✓ PROFIL SPEICHERN
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Live Preview — Public Creator Page */}
+            <div style={{ background: "#0B0F18", border: `1px solid ${plan.color}30`, borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: plan.color, letterSpacing: ".15em", textTransform: "uppercase", padding: "12px 16px", borderBottom: `1px solid ${plan.color}20` }}>// Live Vorschau — Öffentliches Creator-Profil</div>
+              {/* Browser Bar */}
+              <div style={{ background: "#141C28", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, borderBottom: "1px solid #0d1117" }}>
+                {["#EF4444","#F59E0B","#10B981"].map(c => <div key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c }}/>)}
+                <div style={{ flex: 1, background: "#0B0F18", borderRadius: 10, padding: "3px 10px", fontSize: 8, fontFamily: "DM Mono,monospace", color: "#4A5568", textAlign: "center" }}>realsyncdynamics.de/creator/dominik_steiner</div>
+              </div>
+
+              {/* Profile Page Preview */}
+              <div style={{ padding: 20, background: `linear-gradient(160deg, ${plan.color}10 0%, #03050A 50%)` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, border: `2px solid ${plan.color}`, background: `${plan.color}15`, flexShrink: 0 }}>🎬</div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 15 }}>Dominik Steiner</div>
+                    <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>@dominik_steiner</div>
+                    <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 8, fontWeight: 800, padding: "1px 7px", background: plan.color, color: "#000", borderRadius: 2 }}>{plan.emoji} {plan.name.toUpperCase()}</span>
+                      {vl >= 3 && <span style={{ fontSize: 8, padding: "1px 5px", background: "#7C3AED22", border: "1px solid #7C3AED40", color: "#A78BFA", borderRadius: 2 }}>⛓</span>}
+                      {vl >= 4 && <span style={{ fontSize: 8, padding: "1px 5px", background: "#0EA5E922", border: "1px solid #0EA5E940", color: "#38BDF8", borderRadius: 2 }}>C2PA</span>}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 10, color: "#7A8498", marginBottom: 10 }}>Creator · Developer · Gründer RealSync Dynamics 🚀</div>
+
+                {/* Social Buttons */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                  {SOCIAL_PLATFORMS.filter(s => connectedSocials[s.id]).map(s => (
+                    <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 4, border: `1px solid ${s.color}30`, background: s.color + "10", fontSize: 9, fontWeight: 700, color: s.color }}>
+                      {s.icon} {s.followers}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Stats */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginBottom: 12 }}>
+                  {[[(totalFollowers/1000).toFixed(1)+"K","Follower"],["98.2","Trust Score"],["7.9M","Views"]].map(([v,l]) => (
+                    <div key={l} style={{ textAlign: "center", background: "#0B0F18", borderRadius: 6, padding: "8px 4px", border: "1px solid #141C28" }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: plan.color }}>{v}</div>
+                      <div style={{ fontSize: 7.5, fontFamily: "DM Mono,monospace", color: "#4A5568", marginTop: 2 }}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* QR */}
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <div style={{ background: "white", borderRadius: 8, padding: 8 }}>
+                    <QR size={72} />
+                  </div>
+                </div>
+                <div style={{ textAlign: "center", fontSize: 8, fontFamily: "DM Mono,monospace", color: "#4A5568", marginTop: 6 }}>realsyncdynamics.de/creator/dominik_steiner</div>
+              </div>
+            </div>
+          </div>
+        </>}
+
+        {/* ════════ VERIFY ════════ */}
+        {activeTab === "verify" && <>
+          {/* Verification Pyramid */}
+          <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 20, marginBottom: 14 }}>
+            <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 18 }}>// Verifikationsstufen — RealSync Creator Badges</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {PLANS.map(p => {
+                const active = vl >= p.verifyLevel;
+                const current = vl === p.verifyLevel;
                 return (
-                  <div key={v.level} className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${current?'ring-1':''}`}
-                    style={{borderColor:active?v.color+'60':'#374151',background:active?v.color+'08':'#111827',ringColor:v.color}}>
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl border-2 flex-shrink-0"
-                      style={{borderColor:active?v.color:'#374151',background:active?v.color+'20':'transparent'}}>
-                      {active?v.icon:'🔒'}
+                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 6, border: `1px solid ${p.color}${active ? "60" : "20"}`,
+                    background: active ? `${p.color}08` : "#0a0d14", transition: "all .2s",
+                    boxShadow: current ? `0 0 20px ${p.color}15` : "none" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, border: `2px solid ${p.color}${active ? "80" : "20"}`,
+                      background: active ? `${p.color}20` : "transparent", flexShrink: 0, animation: current ? "float 3s ease infinite" : "none" }}>
+                      {active ? p.emoji : "🔒"}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="font-black text-sm" style={{color:active?v.color:'#6B7280'}}>Stufe {v.level} — {v.name}</span>
-                        {current&&<span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">✓ Aktiv</span>}
-                        {!active&&v.level>vl&&<span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-500">{v.plan} benötigt</span>}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                        <span style={{ fontWeight: 800, fontSize: 13, color: active ? p.color : "#2A3348" }}>Stufe {p.verifyLevel} — {p.name} Creator</span>
+                        {current && <span style={{ fontSize: 8, padding: "2px 8px", background: "#00C85320", border: "1px solid #00C85340", color: "#00C853", borderRadius: 2, fontFamily: "DM Mono,monospace", fontWeight: 700 }}>✓ AKTIV</span>}
+                        {!active && <span style={{ fontSize: 8, padding: "2px 8px", background: "#1a2238", color: "#4A5568", borderRadius: 2, fontFamily: "DM Mono,monospace" }}>{p.name} benötigt</span>}
                       </div>
-                      <div className="text-xs text-gray-400">{v.desc}</div>
+                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                        {p.features.filter(f => f.on).slice(0, 5).map(f => (
+                          <span key={f.text} style={{ fontSize: 8, fontFamily: "DM Mono,monospace", padding: "2px 6px", background: `${p.color}15`, color: p.color, borderRadius: 2 }}>{f.icon} {f.text}</span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex-shrink-0">
-                      {active?<div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-black" style={{background:v.color}}>✓</div>
-                             :<Link href="/pricing?app=creatorseal" className="text-xs px-3 py-1 rounded-full border border-gray-600 text-gray-400 hover:border-gray-400">↑</Link>}
+                    <div style={{ flexShrink: 0, textAlign: "right" }}>
+                      {active
+                        ? <div style={{ width: 32, height: 32, borderRadius: "50%", background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#000", fontSize: 14 }}>✓</div>
+                        : <button className="btn-hover" onClick={() => setActivePlan(p.id)}
+                            style={{ fontSize: 8, fontFamily: "DM Mono,monospace", fontWeight: 700, padding: "5px 10px", cursor: "pointer", background: "transparent", border: `1px solid ${p.color}40`, color: p.color, borderRadius: 2 }}>
+                            UPGRADE →
+                          </button>}
                     </div>
                   </div>
                 );
@@ -246,55 +707,80 @@ export default function CreatorSealDashboard() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          {/* Verification Tech Stack */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
             {[
-              {title:'Polygon Blockchain',icon:'⛓',color:'#9333EA',on:p.blockchain,detail:'0x7a2c...d8f1 · Block #68.241.009',lock:'Silber+'},
-              {title:'Unsichtbares Wasserzeichen',icon:'💧',color:'#3B82F6',on:p.watermark,detail:`WM-ID: ${code}`,lock:'Bronze+'},
-              {title:'C2PA 2.3 Standard',icon:'🔐',color:'#06B6D4',on:p.c2pa,detail:'Ed25519 · SHA-256 · EU AI Act',lock:'Gold+'},
-            ].map(b=>(
-              <div key={b.title} className={`bg-gray-900 border rounded-xl p-5 ${b.on?'':'opacity-50'}`} style={{borderColor:b.on?b.color+'40':'#374151'}}>
-                <div className="text-2xl mb-2">{b.icon}</div>
-                <div className="font-black mb-2">{b.title}</div>
-                {b.on?<div className="text-xs font-mono" style={{color:b.color}}>{b.detail}</div>
-                     :<div className="text-xs text-gray-500">🔒 {b.lock}</div>}
+              { t: "Polygon Blockchain", icon: "⛓", color: "#9333EA", desc: "Unveränderlicher Zeitstempel auf Polygon PoS. Jeder Content erhält einen einzigartigen Block-Hash als Urheberschaftsbeweis.", detail: "0x7a2c4f8d...d8f1 · Block #68.241.009 · Polygon Mumbai", on: vl >= 3 },
+              { t: "Unsichtbares Wasserzeichen", icon: "💧", color: "#3B82F6", desc: "Steganografisches Wasserzeichen direkt in deinen Content eingebettet. Unsichtbar für Zuschauer — gerichtsfest für dich.", detail: `WM-ID: RS-2026-D5T8K1 · SHA-256 Hash aktiv`, on: vl >= 2 },
+              { t: "C2PA 2.3 Standard", icon: "🔐", color: "#06B6D4", desc: "Coalition for Content Provenance and Authenticity. Ed25519-Signatur + SHA-256 Hash-Chain. EU AI Act konform.", detail: "Ed25519 · SHA-256 · C2PA 2.3 · EU AI Act Ready", on: vl >= 4 },
+            ].map(b => (
+              <div key={b.t} style={{ background: "#0B0F18", border: `1px solid ${b.on ? b.color + "40" : "#141C28"}`, borderRadius: 8, padding: 16, opacity: b.on ? 1 : .4 }}>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>{b.icon}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 6 }}>{b.t}</div>
+                <div style={{ fontSize: 9.5, color: "#7A8498", lineHeight: 1.6, marginBottom: 10 }}>{b.desc}</div>
+                {b.on
+                  ? <div style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: b.color, background: `${b.color}10`, padding: "6px 8px", borderRadius: 4 }}>{b.detail}</div>
+                  : <div style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: "#2A3348" }}>🔒 Höheres Paket benötigt</div>}
               </div>
             ))}
           </div>
         </>}
 
-        {/* ── SOCIAL ── */}
-        {tab==='social'&&<>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">// Social Media Integrationen · Alle gratis APIs</div>
-            <div className="text-xs text-gray-500 mb-5">YouTube Data API v3 · TikTok Display API · Instagram Basic Display · Facebook Graph API · Twitch Helix API</div>
-            <div className="grid md:grid-cols-2 gap-3">
-              {SOCIALS.map(s=>{
-                const conn=socials[s.id];
+        {/* ════════ SOCIAL ════════ */}
+        {activeTab === "social" && <>
+          <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18, marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase" }}>// Social Media Integrationen · Alle gratis APIs</div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {[["YT","#FF0000"],["TT","#00F2EA"],["IG","#E1306C"],["FB","#1877F2"],["TW","#9147FF"],["X","#FFF"]].map(([n,c]) => (
+                  <div key={n} style={{ width: 20, height: 4, borderRadius: 2, background: c, opacity: .6 }}/>
+                ))}
+              </div>
+            </div>
+            <div style={{ fontSize: 9, color: "#2A3348", fontFamily: "DM Mono,monospace", marginBottom: 14 }}>
+              YouTube Data API v3 · TikTok Display API · Instagram Basic Display · Facebook Graph API · Twitch Helix API · Twitter v2
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+              {SOCIAL_PLATFORMS.map(s => {
+                const conn = connectedSocials[s.id];
+                const planIdx = ["youtube","tiktok","instagram","facebook","twitch","x"].indexOf(s.id);
+                const reqLevel = planIdx < 2 ? 1 : planIdx < 5 ? 3 : 4;
+                const locked = vl < reqLevel;
                 return (
-                  <div key={s.id} className="border rounded-xl overflow-hidden" style={{borderColor:conn?s.color+'40':'#374151',background:conn?s.bg:'#111827'}}>
-                    <div className="flex items-center gap-3 p-4">
-                      <span className="text-2xl">{s.icon}</span>
-                      <div className="flex-1">
-                        <div className="font-black text-sm" style={{color:conn?s.color:'#9CA3AF'}}>{s.name}</div>
-                        <div className="text-xs text-gray-500">{s.api}</div>
+                  <div key={s.id} style={{ border: `1px solid ${conn && !locked ? s.color + "40" : "#1a2238"}`, borderRadius: 8, overflow: "hidden", background: conn && !locked ? s.color + "08" : "#0a0d14", opacity: locked ? .4 : 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px" }}>
+                      <span style={{ fontSize: 26, width: 36 }}>{s.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 800, fontSize: 13, color: conn && !locked ? s.color : "#4A5568" }}>{s.name}</div>
+                        <div style={{ fontSize: 8.5, fontFamily: "DM Mono,monospace", color: "#2A3348" }}>
+                          {s.id === "youtube" ? "YouTube Data API v3 (kostenlos)" :
+                           s.id === "tiktok" ? "TikTok Display API (kostenlos)" :
+                           s.id === "instagram" ? "Instagram Basic Display API" :
+                           s.id === "facebook" ? "Facebook Graph API (kostenlos)" :
+                           s.id === "twitch" ? "Twitch Helix API (kostenlos)" : "Twitter API v2 Basic (kostenlos)"}
+                        </div>
                       </div>
-                      <button onClick={()=>setSocials(prev=>({...prev,[s.id]:!prev[s.id]}))}
-                        className="text-xs font-bold px-3 py-1.5 rounded-full border transition-all"
-                        style={conn?{borderColor:s.color,color:s.color,background:s.color+'15'}:{borderColor:'#374151',color:'#9CA3AF'}}>
-                        {conn?'✓ Verbunden':'+ Verbinden'}
+                      <button onClick={() => !locked && setConnectedSocials(prev => ({ ...prev, [s.id]: !prev[s.id] }))}
+                        style={{ fontSize: 9, fontFamily: "DM Mono,monospace", fontWeight: 700, padding: "5px 10px", cursor: locked ? "default" : "pointer",
+                          background: conn && !locked ? `${s.color}20` : "transparent", border: `1px solid ${conn && !locked ? s.color : "#1a2238"}`,
+                          color: conn && !locked ? s.color : "#4A5568", borderRadius: 2 }}>
+                        {locked ? "🔒" : conn ? "✓ VERBUNDEN" : "+ VERBINDEN"}
                       </button>
                     </div>
-                    {conn&&<>
-                      <div className="border-t px-4 py-3 grid grid-cols-4 gap-2 text-center" style={{borderColor:s.color+'20'}}>
-                        {[['followers','Follower'],[`posts`,'Posts'],['views','Views'],['engagement','Engage']].map(([k,l])=>(
-                          <div key={k}>
-                            <div className="font-black text-xs" style={{color:k==='engagement'?'#00C853':k==='followers'?s.color:'white'}}>{STATS[s.id][k as 'followers'|'posts'|'views'|'engagement']}</div>
-                            <div className="text-xs text-gray-500">{l}</div>
+                    {conn && !locked && <>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", padding: "8px 14px", borderTop: `1px solid ${s.color}15`, gap: 4 }}>
+                        {[[s.followers,"Follower"],[s.videos,"Posts"],[s.views,"Views"],[s.engagement,"Engage"]].map(([v,l]) => (
+                          <div key={l} style={{ textAlign: "center" }}>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: l === "Engage" ? "#00C853" : l === "Follower" ? s.color : "#E4E6EF" }}>{v}</div>
+                            <div style={{ fontSize: 7.5, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>{l}</div>
                           </div>
                         ))}
                       </div>
-                      <div className="px-4 pb-3 flex flex-wrap gap-1">
-                        {s.features.map(f=><span key={f} className="text-xs px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">{f}</span>)}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "6px 14px 10px" }}>
+                        {["Profil anzeigen","Feed einbetten","Analytics","Follower-Growth","Auto-Posting","Kommentar-Management"].slice(0, s.id === "youtube" ? 5 : 4).map(f => (
+                          <span key={f} style={{ fontSize: 7.5, fontFamily: "DM Mono,monospace", padding: "2px 6px", background: "#141C28", color: "#4A5568", borderRadius: 2 }}>{f}</span>
+                        ))}
                       </div>
                     </>}
                   </div>
@@ -302,170 +788,163 @@ export default function CreatorSealDashboard() {
               })}
             </div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <div className="text-xs text-gray-500 uppercase tracking-widest mb-4">// Aggregiert · Alle Plattformen</div>
-            <div className="grid grid-cols-4 gap-4 text-center">
-              <div><div className="text-3xl font-black text-cyan-400">{(totalF/1000).toFixed(1)}K</div><div className="text-xs text-gray-500">Total Follower</div></div>
-              <div><div className="text-3xl font-black text-green-400">7.9M</div><div className="text-xs text-gray-500">Total Views</div></div>
-              <div><div className="text-3xl font-black text-yellow-400">8.2%</div><div className="text-xs text-gray-500">Ø Engagement</div></div>
-              <div><div className="text-3xl font-black text-purple-400">{Object.values(socials).filter(Boolean).length}</div><div className="text-xs text-gray-500">Plattformen</div></div>
-            </div>
-          </div>
-        </>}
 
-        {/* ── CONTENT ── */}
-        {tab==='content'&&(
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <div className="text-xs text-gray-500 uppercase tracking-widest mb-4">// Content Feed — Alle Plattformen</div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Aggregate */}
+          <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18 }}>
+            <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 14 }}>// Aggregierte Stats · Alle Plattformen kombiniert</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
               {[
-                {plat:'youtube', title:'RealSync Dynamics Intro', views:'24.3K', date:'vor 2T', thumb:'🎬', wm:true},
-                {plat:'tiktok',  title:'CreatorSeal Demo #fyp',  views:'156K',  date:'vor 5T', thumb:'🎵', wm:true},
-                {plat:'youtube', title:'Tutorial: C2PA 2.3',     views:'8.7K',  date:'vor 1W', thumb:'📹', wm:true},
-                {plat:'tiktok',  title:'Blockchain für Creator', views:'89K',   date:'vor 1W', thumb:'⛓',  wm:true},
-                {plat:'instagram',title:'Behind the Scenes',     views:'12K',   date:'vor 2W', thumb:'📸', wm:false},
-                {plat:'instagram',title:'Launch Day!',           views:'9.4K',  date:'vor 3W', thumb:'🚀', wm:true},
-                {plat:'youtube', title:'Q&A Session',            views:'5.2K',  date:'vor 4W', thumb:'🎤', wm:false},
-                {plat:'tiktok',  title:'Tech Stack 2026',        views:'234K',  date:'vor 1M', thumb:'💻', wm:true},
-              ].map((c,i)=>{
-                const s=SOCIALS.find(s=>s.id===c.plat)!;
-                const conn=socials[c.plat];
-                return (
-                  <div key={i} className={`bg-gray-800 border border-gray-700 rounded-xl overflow-hidden ${!conn?'opacity-40':''}`}>
-                    <div className="h-24 flex items-center justify-center text-4xl" style={{background:s.bg}}>{c.thumb}</div>
-                    <div className="p-3">
-                      <div className="flex items-center gap-1 mb-1">
-                        <span className="text-xs">{s.icon}</span>
-                        <span className="text-xs font-bold" style={{color:s.color}}>{s.name}</span>
-                        {c.wm&&p.watermark&&<span className="ml-auto text-xs text-blue-400">💧</span>}
-                      </div>
-                      <div className="text-xs font-semibold text-white mb-1">{c.title}</div>
-                      <div className="flex items-center justify-between text-xs text-gray-400">
-                        <span>{c.views}</span><span>{c.date}</span>
-                      </div>
+                { v: (totalFollowers/1000).toFixed(1)+"K", l: "Total Follower", c: CYAN, spark: [22,28,32,36,40,45,parseInt((totalFollowers/1000).toString())] },
+                { v: "7.9M", l: "Total Views", c: "#00C853", spark: [1.2,2.1,2.8,3.9,5.1,6.4,7.9] },
+                { v: "8.2%", l: "Ø Engagement", c: GOLD, spark: [6.1,6.8,7.2,7.4,7.8,8.0,8.2] },
+                { v: Object.values(connectedSocials).filter(Boolean).length+"/6", l: "Plattformen", c: "#9147FF", spark: [1,1,2,2,2,3,Object.values(connectedSocials).filter(Boolean).length] },
+              ].map(s => (
+                <div key={s.l} style={{ background: "#141C28", borderRadius: 8, padding: 14, border: `1px solid ${s.c}20` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <div style={{ fontSize: 26, fontWeight: 800, color: s.c }}>{s.v}</div>
+                      <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", marginTop: 4 }}>{s.l}</div>
                     </div>
+                    <Sparkline data={s.spark} color={s.c}/>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── PROFILE ── */}
-        {tab==='profile'&&(
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <div className="text-xs text-gray-500 uppercase tracking-widest mb-4">// Profil bearbeiten</div>
-              <div className="space-y-3">
-                {[{l:'Anzeigename',v:'Dominik Steiner',t:'text'},{l:'Username',v:username,t:'text'},{l:'Bio',v:'Creator, Developer & Gründer RealSync Dynamics 🚀',t:'ta'},{l:'Website',v:'realsyncdynamics.de',t:'url'},{l:'Ort',v:'Neuhaus am Rennweg, Thüringen 🇩🇪',t:'text'},{l:'Kategorie',v:'Tech & Startup',t:'text'}].map(f=>(
-                  <div key={f.l}>
-                    <label className="text-xs text-gray-400 mb-1 block">{f.l}</label>
-                    {f.t==='ta'
-                      ?<textarea className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white resize-none focus:outline-none focus:border-cyan-500" rows={2} defaultValue={f.v}/>
-                      :<input type={f.t} className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500" defaultValue={f.v}/>}
-                  </div>
-                ))}
-                <button className="w-full py-2 rounded-lg bg-cyan-500 text-black text-sm font-black hover:bg-cyan-400">✓ Speichern</button>
-              </div>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <div className="text-xs text-gray-500 uppercase tracking-widest mb-4">// Profil-Vorschau</div>
-              <div className="bg-gray-800 rounded-xl p-5 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl text-3xl mb-3 border-2" style={{background:p.color+'20',borderColor:p.color}}>🎬</div>
-                <div className="font-black mb-0.5">Dominik Steiner</div>
-                <div className="text-xs text-gray-400 font-mono mb-2">@{username}</div>
-                <div className="flex justify-center gap-1 mb-3 flex-wrap">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{background:p.color,color:'#000'}}>{p.emoji} {p.name}</span>
-                  {p.blockchain&&<span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">⛓</span>}
-                  {p.c2pa&&<span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">C2PA</span>}
                 </div>
-                <div className="text-xs text-gray-400 mb-3">Creator · Developer · RealSync Dynamics</div>
-                <div className="flex justify-center gap-2 mb-4">
-                  {SOCIALS.filter(s=>socials[s.id]).map(s=>(
-                    <span key={s.id} className="text-lg">{s.icon}</span>
-                  ))}
-                </div>
-                <div className="flex justify-center"><div className="bg-white rounded-lg p-1.5"><QR value={`https://realsyncdynamics.de/creator/${username}`} size={80}/></div></div>
-                <div className="text-xs font-mono text-gray-500 mt-2">realsyncdynamics.de/creator/{username}</div>
-              </div>
-              <Link href={`/creator/${username}`} className="mt-3 block text-center text-xs font-bold py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">🌐 Profil öffnen →</Link>
-            </div>
-          </div>
-        )}
-
-        {/* ── WEBSITE ── */}
-        {tab==='website'&&<>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              {tier:'Gratis',plan:'gratis',color:'#6B7280',emoji:'🆓',on:true,features:['Öffentliches Creator-Profil','QR-Code + Barcode','Social Media Links','Verification Badge','realsyncdynamics.de/creator/du']},
-              {tier:'Silber+',plan:'silber',color:'#C0C0C0',emoji:'🥈',on:vl>=3,features:['Alle Gratis-Features','Custom Design','Video-Feed','Kontakt-Formular','Besucher-Analytics']},
-              {tier:'Platin+',plan:'platin',color:'#00D4FF',emoji:'💎',on:vl>=5,features:['Alle Silber-Features','Custom Domain','Shop-Integration','Newsletter','SEO-Tools']},
-            ].map(w=>(
-              <div key={w.tier} className={`border rounded-xl p-5 ${!w.on?'opacity-50':''}`} style={{borderColor:w.on?w.color+'40':'#374151'}}>
-                <div className="text-2xl mb-2">{w.emoji}</div>
-                <div className="font-black mb-3" style={{color:w.color}}>{w.tier}</div>
-                <div className="space-y-1.5 mb-4">
-                  {w.features.map(f=>(
-                    <div key={f} className="flex items-center gap-2 text-xs">
-                      <span className={w.on?'text-green-400':'text-gray-600'}>✓</span>
-                      <span className={w.on?'text-gray-300':'text-gray-600'}>{f}</span>
-                    </div>
-                  ))}
-                </div>
-                {w.on
-                  ?<button className="w-full py-2 rounded-lg text-xs font-black" style={{background:w.color,color:'#000'}}>Bearbeiten →</button>
-                  :<Link href="/pricing?app=creatorseal" className="block w-full py-2 rounded-lg text-xs font-bold text-center bg-gray-800 text-gray-500">Upgrade auf {w.plan} →</Link>}
-              </div>
-            ))}
-          </div>
-
-          {/* Live Preview */}
-          <div className="bg-gray-900 border border-cyan-500/30 rounded-xl p-5">
-            <div className="text-xs text-cyan-500 uppercase tracking-widest mb-4">// Live Vorschau — Creator Page</div>
-            <div className="bg-gray-800 rounded-xl overflow-hidden max-w-sm mx-auto">
-              <div className="bg-gray-700 px-3 py-2 flex items-center gap-2">
-                <div className="flex gap-1">{['bg-red-500','bg-yellow-500','bg-green-500'].map(c=><div key={c} className={`w-2 h-2 rounded-full ${c}`}/>)}</div>
-                <div className="flex-1 bg-gray-600 rounded text-xs text-gray-300 px-2 py-0.5 text-center font-mono">realsyncdynamics.de/creator/{username}</div>
-              </div>
-              <div className="p-6 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl text-3xl mb-3 border-2" style={{background:p.color+'20',borderColor:p.color}}>🎬</div>
-                <div className="font-black mb-0.5">Dominik Steiner</div>
-                <div className="text-xs text-gray-400 font-mono mb-2">@{username}</div>
-                <div className="flex justify-center gap-1 mb-3 flex-wrap">
-                  <span className="text-xs px-2 py-0.5 rounded-full font-black" style={{background:p.color,color:'#000'}}>{p.emoji} {p.name}</span>
-                  {p.blockchain&&<span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400">⛓</span>}
-                  {p.c2pa&&<span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400">C2PA</span>}
-                </div>
-                <div className="flex justify-center gap-3 mb-4">
-                  {SOCIALS.filter(s=>socials[s.id]).map(s=><span key={s.id} className="text-lg">{s.icon}</span>)}
-                </div>
-                <div className="flex justify-center">
-                  <div className="bg-white rounded p-1.5"><QR value={`https://realsyncdynamics.de/creator/${username}`} size={80}/></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </>}
+
+        {/* ════════ APPS & TOOLS ════════ */}
+        {activeTab === "apps" && <>
+          <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18, marginBottom: 14 }}>
+            <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 4 }}>// Freigeschaltete Apps & Tools · {plan.name}-Plan</div>
+            <div style={{ fontSize: 9, color: "#2A3348", fontFamily: "DM Mono,monospace", marginBottom: 16 }}>
+              {vl >= 4 ? "Alle 16 Apps freigeschaltet" : `${APPS_BY_PLAN[activePlan].length} Apps verfügbar · Upgrade für mehr`}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+              {[
+                { n:"CreatorSeal",     i:"🛡", c:"#C9A84C", desc:"Identity & Verifikation",            locked:false },
+                { n:"AdEngine",        i:"📺", c:"#FF6888", desc:"KI-Werbung 7 Kanäle",               locked:vl<2 },
+                { n:"DataCore",        i:"📊", c:"#00F0FF", desc:"Analytics & BI",                    locked:vl<3 },
+                { n:"SocialHub",       i:"📱", c:"#80FFC0", desc:"Social Media Manager",              locked:vl<3 },
+                { n:"Creator-Website", i:"🌐", c:"#A78BFA", desc:"Eigene Creator-Page",               locked:false },
+                { n:"Optimus",         i:"🤖", c:"#60D0FF", desc:"9 KI-Modelle · Perplexity",         locked:vl<4 },
+                { n:"AutoOS",          i:"⚡", c:"#C080FF", desc:"Agenten & Automation",              locked:vl<4 },
+                { n:"FlowSync",        i:"🔄", c:"#A78BFA", desc:"Workspace & Datenbanken",           locked:vl<4 },
+                { n:"ReviewRadar",     i:"⭐", c:"#F9AB00", desc:"Review Management",                 locked:vl<4 },
+                { n:"ChurnRescue",     i:"💳", c:"#FF4444", desc:"Stripe Recovery",                   locked:vl<4 },
+                { n:"WaitlistKit",     i:"🚀", c:"#00FF88", desc:"Viral Waitlist",                    locked:vl<4 },
+                { n:"EduLab",          i:"🎓", c:"#FFE060", desc:"Bildung & Lernpfade",               locked:vl<4 },
+                { n:"Analytics Pro",   i:"📈", c:"#FF6B35", desc:"Enterprise Analytics",             locked:vl<5 },
+                { n:"API-Hub",         i:"🔌", c:"#00D4FF", desc:"Unbegrenzte API-Aufrufe",           locked:vl<5 },
+                { n:"White-Label",     i:"🎨", c:"#E879F9", desc:"Creator-Brand Tools",               locked:vl<5 },
+                { n:"Enterprise",      i:"🏢", c:"#94A3B8", desc:"Team & Custom Integration",         locked:vl<6 },
+              ].map(app => (
+                <div key={app.n} style={{ padding: "12px 10px", borderRadius: 6, border: `1px solid ${app.locked ? "#1a2238" : app.c + "35"}`,
+                  background: app.locked ? "#0a0d14" : app.c + "08", opacity: app.locked ? .35 : 1, cursor: app.locked ? "default" : "pointer",
+                  transition: "all .15s" }}
+                  className={app.locked ? "" : "social-card"}>
+                  <div style={{ fontSize: 22, marginBottom: 6 }}>{app.i}</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: app.locked ? "#2A3348" : app.c, marginBottom: 2 }}>{app.n}</div>
+                  <div style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: "#4A5568", lineHeight: 1.4 }}>{app.desc}</div>
+                  {app.locked && <div style={{ fontSize: 7, fontFamily: "DM Mono,monospace", color: "#1a2238", marginTop: 4 }}>🔒 Upgrade nötig</div>}
+                  {!app.locked && <div style={{ fontSize: 7, fontFamily: "DM Mono,monospace", color: app.c, marginTop: 4 }}>✓ AKTIV</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Unlock per Plan */}
+          <div style={{ background: "#0B0F18", border: "1px solid #141C28", borderRadius: 8, padding: 18 }}>
+            <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568", letterSpacing: ".15em", textTransform: "uppercase", marginBottom: 14 }}>// Apps je Paket</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
+              {PLANS.map(p => (
+                <div key={p.id} style={{ background: "#0a0d14", border: `1px solid ${p.color}30`, borderRadius: 6, padding: 12,
+                  boxShadow: activePlan === p.id ? `0 0 20px ${p.color}20` : "none" }}>
+                  <div style={{ textAlign: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 18 }}>{p.emoji}</div>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: p.color }}>{p.name}</div>
+                    <div style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>
+                      {p.price === 0 ? "Gratis" : `€${p.price}/Mo`}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>
+                    {APPS_BY_PLAN[p.id].map(a => (
+                      <div key={a} style={{ padding: "2px 0", display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ color: p.color }}>▸</span> {a}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>}
+
       </div>
 
-      {/* QR MODAL */}
-      {showQR&&(
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={()=>setShowQR(false)}>
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-xs w-full" onClick={e=>e.stopPropagation()}>
-            <div className="text-center mb-4">
-              <div className="font-black text-lg mb-1">Creator QR-Code</div>
-              <div className="text-xs font-mono text-gray-400">{code}</div>
+      {/* ── QR MODAL ── */}
+      {showQR && (
+        <div onClick={() => setShowQR(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(3,5,10,.92)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background: "#0B0F18", border: `1px solid ${plan.color}50`, borderRadius: 12, padding: 28, maxWidth: 320, width: "100%",
+              boxShadow: `0 0 60px ${plan.color}20` }}>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>Creator QR-Code</div>
+              <div style={{ fontSize: 9, fontFamily: "DM Mono,monospace", color: "#4A5568" }}>RS-2026-D5T8K1</div>
             </div>
-            <div className="flex justify-center mb-3"><div className="bg-white rounded-xl p-3"><QR value={`https://realsyncdynamics.de/creator/${username}`} size={180}/></div></div>
-            <div className="flex justify-center mb-3"><div className="bg-white rounded p-2"><Barcode value={code}/></div></div>
-            <div className="text-center text-xs text-gray-500 mb-4">realsyncdynamics.de/creator/{username}</div>
-            <div className="grid grid-cols-2 gap-2">
-              <button className="py-2 rounded-lg bg-cyan-500 text-black text-sm font-black">📥 Download</button>
-              <button onClick={()=>setShowQR(false)} className="py-2 rounded-lg bg-gray-800 text-gray-400 text-sm">Schließen</button>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14, filter: `drop-shadow(0 0 20px ${plan.color}40)` }}>
+              <div style={{ background: "white", borderRadius: 10, padding: 10 }}>
+                <QR size={180} color="#000"/>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+              <div style={{ background: "white", borderRadius: 6, padding: "8px 10px" }}>
+                <Barcode value="RS-2026-D5T8K1" height={52}/>
+              </div>
+            </div>
+            <div style={{ textAlign: "center", fontSize: 8.5, fontFamily: "DM Mono,monospace", color: "#4A5568", marginBottom: 14 }}>
+              realsyncdynamics.de/creator/dominik_steiner
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <button className="btn-hover"
+                style={{ padding: "10px 0", borderRadius: 4, fontSize: 10, fontFamily: "DM Mono,monospace", fontWeight: 700, cursor: "pointer", background: plan.color, color: "#000", border: "none", letterSpacing: ".07em" }}>
+                📥 DOWNLOAD
+              </button>
+              <button onClick={() => setShowQR(false)}
+                style={{ padding: "10px 0", borderRadius: 4, fontSize: 10, fontFamily: "DM Mono,monospace", fontWeight: 700, cursor: "pointer", background: "#141C28", color: "#4A5568", border: "1px solid #1a2238" }}>
+                SCHLIESSEN
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* ── BOTTOM TICKER ── */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 28, background: "rgba(3,5,10,.98)", borderTop: "1px solid #00F0FF0A", display: "flex", alignItems: "center", overflow: "hidden", zIndex: 99 }}>
+        <div style={{ flexShrink: 0, padding: "0 10px", borderRight: "1px solid #0F1520", display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#00FF88", animation: "pulse 1s ease infinite" }}/>
+          <span style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: CYAN, letterSpacing: ".15em" }}>LIVE</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 24, padding: "0 16px", overflow: "hidden", whiteSpace: "nowrap" }}>
+          {[
+            `${plan.emoji} ${plan.name} Plan aktiv`,
+            `Verifikationsstufe ${vl}/6`,
+            `Trust Score 98.2`,
+            `⛓ Polygon Block #68.241.009`,
+            `💧 Wasserzeichen aktiv`,
+            `${Object.values(connectedSocials).filter(Boolean).length} Plattformen verbunden`,
+            `${(totalFollowers/1000).toFixed(1)}K Total Follower`,
+            `C2PA 2.3 ${vl >= 4 ? "✓" : "—"}`,
+            `RS-2026-D5T8K1`,
+          ].map((t, i) => (
+            <span key={i} style={{ fontSize: 8, fontFamily: "DM Mono,monospace", color: i === 0 ? plan.color : "#2A3348", letterSpacing: ".07em" }}>
+              {t} <span style={{ color: "#0F1520", marginLeft: 16 }}>◆</span>
+            </span>
+          ))}
+        </div>
+      </div>
+      <div style={{ height: 28 }}/>
     </div>
   );
 }
