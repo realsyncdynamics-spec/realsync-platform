@@ -221,9 +221,9 @@ export default function HomePage() {
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
           {[
-            {name:'🆓 Gratis', price:'€0', sub:'Für immer', features:['Creator-Profil','QR-Code','Basis-Badge'], color:'#6B7280'},
-            {name:'🥉 Bronze', price:'€19', sub:'/Monat · alle Tools', features:['Alle Dashboard-Tools','KI-Antworten (50/Mo)','3 Plattformen','Bronze Badge'], color:'#CD7F32'},
-            {name:'🥈 Silber', price:'€49', sub:'/Monat', features:['Blockchain Zeitstempel','KI-Analyse','Bulk-Aktionen','5 Plattformen'], color:'#C0C0C0'},
+            {name:'🆓 Gratis', price:'€0,00', sub:'Für immer', features:['Creator-Profil','QR-Code','Basis-Badge'], color:'#6B7280'},
+            {name:'🥉 Bronze', price:'€19,00', sub:'/Monat · alle Tools', features:['Alle Dashboard-Tools','KI-Antworten (50/Mo)','3 Plattformen','Bronze Badge'], color:'#CD7F32'},
+            {name:'🥈 Silber', price:'€49,00', sub:'/Monat', features:['Blockchain Zeitstempel','KI-Analyse','Bulk-Aktionen','5 Plattformen'], color:'#C0C0C0'},
           ].map(p => (
             <div key={p.name} style={{ background:'#080C14', border:`1px solid ${p.color}30`, borderRadius:12, padding:20 }}>
               <div style={{ fontWeight:800, fontSize:16, color:p.color, marginBottom:4 }}>{p.name}</div>

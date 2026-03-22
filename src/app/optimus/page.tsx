@@ -20,10 +20,10 @@ const MODELS = [
 ];
 
 const COIN_PACKAGES = [
-  { id:'starter', coins:500,   price:5,   label:'Starter',  bonus:0   },
-  { id:'creator', coins:2000,  price:15,  label:'Creator',  bonus:200 },
-  { id:'pro',     coins:5000,  price:30,  label:'Pro',      bonus:800 },
-  { id:'mega',    coins:15000, price:75,  label:'Mega',     bonus:3000},
+  { id:'starter', coins:500,   price:5.00, label:'Starter',  bonus:0   },
+  { id:'creator', coins:2000,  price:15.00, label:'Creator',  bonus:200 },
+  { id:'pro',     coins:5000,  price:30.00, label:'Pro',      bonus:800 },
+  { id:'mega',    coins:15000, price:75.00, label:'Mega',     bonus:3000},
 ];
 
 interface Message {
@@ -182,7 +182,7 @@ export default function OptimusPage() {
                   <div style={{ fontWeight:800, fontSize:18, color:'#C9A84C' }}>{(pkg.coins+pkg.bonus).toLocaleString('de')}</div>
                   <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.4)', marginTop:2 }}>Coins</div>
                   {pkg.bonus > 0 && <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:'#10B981', marginTop:4 }}>+{pkg.bonus} Bonus</div>}
-                  <div style={{ marginTop:8, fontWeight:700, fontSize:14 }}>€{pkg.price}</div>
+                  <div style={{ marginTop:8, fontWeight:700, fontSize:14 }}>€{pkg.price.toFixed(2).replace('.', ',')}</div>
                   <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:'rgba(255,255,255,.3)' }}>{pkg.label}</div>
                 </div>
               ))}

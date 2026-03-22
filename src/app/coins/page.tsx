@@ -50,7 +50,7 @@ export default function CoinsPage() {
           <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:'linear-gradient(90deg,#C9A84C,#FFD700,#C9A84C)'}}/>
           <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:'rgba(201,168,76,.6)',letterSpacing:'.2em',textTransform:'uppercase',marginBottom:10}}>// Dein Guthaben</div>
           <div style={{fontWeight:900,fontSize:48,color:'#C9A84C',lineHeight:1,marginBottom:4}}>{BALANCE.toLocaleString('de')}</div>
-          <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:'rgba(255,255,255,.4)',marginBottom:20}}>RealSyncCoins · ≈ €{(BALANCE/100).toFixed(2)}</div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:'rgba(255,255,255,.4)',marginBottom:20}}>RealSyncCoins · €{(BALANCE/100).toFixed(2).replace('.', ',')}</div>
 
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
             {[{v:`+${EARNED.toLocaleString('de')}`,l:'Verdient gesamt',c:'#10B981'},{v:`-${SPENT.toLocaleString('de')}`,l:'Ausgegeben',c:'#EF4444'}].map(s=>(

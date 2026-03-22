@@ -110,7 +110,7 @@ function PricingContent() {
                     <div className="mt-2">
                       {price===0
                         ?<div className="text-2xl font-black">Gratis</div>
-                        :<><span className="text-2xl font-black">€{price}</span><span className="text-gray-500 text-xs">/Mo</span></>}
+                        :<><span className="text-2xl font-black">€{price.toFixed(2).replace(".", ",")}</span><span className="text-gray-500 text-xs">/Mo</span></>}
                       {billing==='yearly'&&price>0&&<div className="text-green-400 text-xs mt-0.5">-20%</div>}
                     </div>
                   </div>

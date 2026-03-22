@@ -87,7 +87,7 @@ export default function StorePage() {
           <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:'#C9A84C',letterSpacing:'.2em',textTransform:'uppercase',marginBottom:10}}>// Coins einlösen</div>
           <h1 style={{fontWeight:900,fontSize:28,marginBottom:8}}>RealSync Store</h1>
           <p style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:'rgba(255,255,255,.35)'}}>
-            Du hast <span style={{color:'#C9A84C',fontWeight:700}}>{COIN_BALANCE.toLocaleString('de')} Coins</span> · ≈ €{(COIN_BALANCE/100).toFixed(2)} Guthaben
+            Du hast <span style={{color:'#C9A84C',fontWeight:700}}>{COIN_BALANCE.toLocaleString('de')} Coins</span> · €{(COIN_BALANCE/100).toFixed(2).replace('.', ',')} Guthaben
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export default function StorePage() {
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:4}}>
                   <div>
                     <div style={{fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:14,color:'#C9A84C'}}>🪙 {p.coins.toLocaleString('de')}</div>
-                    <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,.25)'}}>≈ €{p.euros}</div>
+                    <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,.25)'}}>€{p.euros.toFixed(2).replace('.', ',')}</div>
                   </div>
                   {done ? (
                     <div style={{padding:'7px 14px',background:'rgba(16,185,129,.15)',border:'1px solid rgba(16,185,129,.3)',borderRadius:8,color:'#10B981',fontFamily:"'DM Mono',monospace",fontSize:11,fontWeight:700}}>
