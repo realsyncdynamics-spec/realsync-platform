@@ -1,201 +1,114 @@
 'use client';
-
 import { useState } from 'react';
+import Link from 'next/link';
 
-const mockCertificates = [
-  { id: 'CERT-001', title: 'Brand Ambassador Certificate', recipient: 'Sarah Miller', type: 'PDF + QR', status: 'Issued', blockchain: 'Verified', created: '2024-01-15', downloads: 234 },
-  { id: 'CERT-002', title: 'Content License Agreement', recipient: 'Alex Chen', type: 'PDF + QR', status: 'Issued', blockchain: 'Verified', created: '2024-01-14', downloads: 189 },
-  { id: 'CERT-003', title: 'Creator Verification Badge', recipient: 'Maria Lopez', type: 'QR Only', status: 'Pending', blockchain: 'Pending', created: '2024-01-13', downloads: 0 },
-  { id: 'CERT-004', title: 'Collaboration Agreement', recipient: 'Tom Wright', type: 'PDF + QR', status: 'Issued', blockchain: 'Verified', created: '2024-01-12', downloads: 156 },
-  { id: 'CERT-005', title: 'Authenticity Certificate', recipient: 'Lisa Park', type: 'PDF + Barcode', status: 'Issued', blockchain: 'Verified', created: '2024-01-11', downloads: 312 },
-  { id: 'CERT-006', title: 'Rights Transfer Document', recipient: 'James Wilson', type: 'PDF + QR', status: 'Draft', blockchain: 'N/A', created: '2024-01-10', downloads: 0 },
+function QRMini({value,size=80}:{value:string;size?:number}) {
+  const cells=21,cs=Math.floor(size/cells);
+  const h=value.split('').reduce((a,c)=>((a<<5)-a+c.charCodeAt(0))|0,5381);
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <rect width={size} height={size} fill="white" rx="3"/>
+      {Array.from({length:cells},(_,r)=>Array.from({length:cells},(_,c)=>{
+        const fp=(r<7&&c<7)||(r<7&&c>=cells-7)||(r>=cells-7&&c<7);
+        const on=fp||((h^(r*31+c*17))&1)===1;
+        return on?<rect key={`${r}${c}`} x={c*cs} y={r*cs} width={cs} height={cs} fill="#111"/>:null;
+      }))}
+    </svg>
+  );
+}
+
+const CERTS = [
+  {id:1, name:'Content Creator Award',    recipient:'Max Müller',     code:'CERT-2026-MM8K', date:'15.03.2026', status:'issued',  verified:true},
+  {id:2, name:'Verified Creator Badge',   recipient:'Lisa Weber',     code:'CERT-2026-LW3K', date:'10.03.2026', status:'issued',  verified:true},
+  {id:3, name:'Brand Partnership',        recipient:'Tom Schmidt',    code:'CERT-2026-TS1K', date:'08.03.2026', status:'draft',   verified:false},
+  {id:4, name:'Excellence Certificate',   recipient:'Anna Bauer',     code:'CERT-2026-AB5K', date:'01.03.2026', status:'expired', verified:false},
 ];
 
-const templates = [
-  { name: 'Brand Certificate', uses: 1240, rating: 4.8 },
-  { name: 'License Agreement', uses: 890, rating: 4.6 },
-  { name: 'Authenticity Seal', uses: 2100, rating: 4.9 },
-  { name: 'Rights Document', uses: 670, rating: 4.5 },
-];
+export default function CertGenDashboard() {
+  const [selected, setSelected] = useState<number|null>(1);
+  const [name, setName] = useState('Max Müller');
+  const [certType, setCertType] = useState('Creator Award');
+  const [generating, setGenerating] = useState(false);
+  const [generated, setGenerated] = useState(false);
 
-export default function CertificateGenDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
+  function generate() {
+    setGenerating(true);
+    setTimeout(()=>{setGenerating(false);setGenerated(true);},1800);
+  }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">CertificateGen</h1>
-            <p className="text-gray-400 mt-1">PDF & QR Certificate Generation with Blockchain Verification</p>
+    <div className="min-h-screen bg-gray-950 text-white">
+      <div className="bg-yellow-950/30 border-b border-yellow-900/30 px-5 py-3 flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <Link href="/hub" className="text-gray-500 text-sm">← Hub</Link>
+          <span className="text-gray-700">|</span>
+          <span className="font-black text-lg text-yellow-400">🏆 CertificateGen</span>
+        </div>
+        <Link href="/pricing" className="text-xs font-bold px-3 py-1.5 bg-yellow-500 text-black rounded-full">Upgrade</Link>
+      </div>
+
+      <div className="grid grid-cols-4 gap-3 p-5">
+        {[{v:'4',l:'Zertifikate',c:'#FBBF24'},{v:'2',l:'Aktiv + verifiziert',c:'#10B981'},{v:'Polygon',l:'Blockchain',c:'#8B5CF6'},{v:'PDF+QR',l:'Export-Formate',c:'#00D4FF'}].map(s=>(
+          <div key={s.l} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div className="text-2xl font-black" style={{color:s.c}}>{s.v}</div>
+            <div className="text-xs text-gray-500 mt-1 font-mono">{s.l}</div>
           </div>
-          <button className="bg-yellow-500 text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-400">
-            + New Certificate
+        ))}
+      </div>
+
+      <div className="px-5 pb-8 grid md:grid-cols-2 gap-4">
+        {/* Generator */}
+        <div className="bg-gray-900 border border-yellow-500/30 rounded-xl p-5">
+          <div className="text-xs font-mono text-yellow-400 uppercase tracking-widest mb-4">// Neues Zertifikat</div>
+          <div className="space-y-3 mb-4">
+            <input value={name} onChange={e=>setName(e.target.value)} placeholder="Empfänger Name"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500"/>
+            <select value={certType} onChange={e=>setCertType(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500">
+              {['Creator Award','Verified Creator Badge','Brand Partnership','Excellence Certificate','Completion Certificate'].map(t=>(
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <button onClick={generate} disabled={generating}
+            className="w-full py-2.5 bg-yellow-500 text-black font-black text-sm rounded-lg hover:bg-yellow-400 disabled:opacity-50">
+            {generating?'⟳ Generiere PDF + QR...':'🏆 Zertifikat erstellen'}
           </button>
+          {generated && (
+            <div className="mt-4 bg-gray-800 border border-yellow-500/20 rounded-xl p-4 text-center">
+              <div className="flex justify-center mb-3">
+                <QRMini value={`CERT-2026-${name.replace(/\s/g,'').toUpperCase().slice(0,4)}K`} size={80}/>
+              </div>
+              <div className="text-sm font-bold text-yellow-400 mb-1">{certType}</div>
+              <div className="text-xs text-gray-400 font-mono mb-2">{name} · {new Date().toLocaleDateString('de')}</div>
+              <div className="flex gap-2 justify-center">
+                <button className="text-xs px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-full">📥 PDF</button>
+                <button className="text-xs px-3 py-1.5 bg-gray-700 border border-gray-600 text-gray-400 rounded-full">⛓ Blockchain</button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Total Certificates', value: '2,847', change: '+18%' },
-            { label: 'Blockchain Verified', value: '2,341', change: '+22%' },
-            { label: 'QR Scans (30d)', value: '12,450', change: '+35%' },
-            { label: 'PDF Downloads', value: '8,920', change: '+14%' },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-              <p className="text-gray-400 text-sm">{stat.label}</p>
-              <p className="text-2xl font-bold mt-1">{stat.value}</p>
-              <p className="text-green-400 text-sm mt-1">{stat.change} vs last month</p>
+        {/* List */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-800">
+            <span className="text-xs font-mono text-gray-400 uppercase tracking-widest">// Alle Zertifikate</span>
+          </div>
+          {CERTS.map(c=>(
+            <div key={c.id} className="px-5 py-3 border-b border-gray-800 last:border-0 flex items-center gap-3 cursor-pointer hover:bg-gray-800/50"
+              onClick={()=>setSelected(selected===c.id?null:c.id)}>
+              <div style={{width:32,height:32,background:'rgba(251,191,36,.12)',border:'1px solid rgba(251,191,36,.25)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>🏆</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-sm">{c.name}</div>
+                <div className="text-xs text-gray-500 font-mono">{c.recipient} · {c.date}</div>
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-mono border ${c.status==='issued'?'bg-green-500/20 text-green-400 border-green-500/30':c.status==='draft'?'bg-gray-800 text-gray-500 border-gray-700':'bg-red-500/20 text-red-400 border-red-500/30'}`}>
+                {c.status}
+              </span>
+              {c.verified && <span className="text-xs text-yellow-400">✓ Blockchain</span>}
             </div>
           ))}
         </div>
-
-        {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b border-zinc-800 pb-2">
-          {['overview', 'certificates', 'templates', 'verification'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-t-lg capitalize ${
-                activeTab === tab ? 'bg-zinc-800 text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Activity */}
-            <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4">Recent Certificates</h3>
-              <div className="space-y-3">
-                {mockCertificates.slice(0, 4).map((cert) => (
-                  <div key={cert.id} className="flex items-center justify-between p-3 bg-zinc-800 rounded-lg">
-                    <div>
-                      <p className="font-medium">{cert.title}</p>
-                      <p className="text-sm text-gray-400">{cert.recipient} - {cert.type}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        cert.status === 'Issued' ? 'bg-green-900 text-green-400' :
-                        cert.status === 'Pending' ? 'bg-yellow-900 text-yellow-400' :
-                        'bg-zinc-700 text-gray-400'
-                      }`}>{cert.status}</span>
-                      <p className="text-xs text-gray-500 mt-1">{cert.created}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Templates */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4">Popular Templates</h3>
-              <div className="space-y-3">
-                {templates.map((t) => (
-                  <div key={t.name} className="p-3 bg-zinc-800 rounded-lg">
-                    <p className="font-medium">{t.name}</p>
-                    <div className="flex justify-between text-sm text-gray-400 mt-1">
-                      <span>{t.uses.toLocaleString()} uses</span>
-                      <span className="text-yellow-400">{t.rating} stars</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'certificates' && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-zinc-800">
-                <tr>
-                  <th className="text-left p-4 text-gray-400 text-sm">ID</th>
-                  <th className="text-left p-4 text-gray-400 text-sm">Title</th>
-                  <th className="text-left p-4 text-gray-400 text-sm">Recipient</th>
-                  <th className="text-left p-4 text-gray-400 text-sm">Type</th>
-                  <th className="text-left p-4 text-gray-400 text-sm">Blockchain</th>
-                  <th className="text-left p-4 text-gray-400 text-sm">Status</th>
-                  <th className="text-left p-4 text-gray-400 text-sm">Downloads</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockCertificates.map((cert) => (
-                  <tr key={cert.id} className="border-t border-zinc-800 hover:bg-zinc-800">
-                    <td className="p-4 text-yellow-400 font-mono text-sm">{cert.id}</td>
-                    <td className="p-4">{cert.title}</td>
-                    <td className="p-4 text-gray-400">{cert.recipient}</td>
-                    <td className="p-4">{cert.type}</td>
-                    <td className="p-4">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        cert.blockchain === 'Verified' ? 'bg-green-900 text-green-400' :
-                        cert.blockchain === 'Pending' ? 'bg-yellow-900 text-yellow-400' :
-                        'bg-zinc-700 text-gray-400'
-                      }`}>{cert.blockchain}</span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        cert.status === 'Issued' ? 'bg-green-900 text-green-400' :
-                        cert.status === 'Pending' ? 'bg-yellow-900 text-yellow-400' :
-                        'bg-zinc-700 text-gray-400'
-                      }`}>{cert.status}</span>
-                    </td>
-                    <td className="p-4 text-gray-400">{cert.downloads}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {activeTab === 'templates' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {['Brand Certificate', 'License Agreement', 'Authenticity Seal', 'Rights Document', 'Creator Badge', 'Custom Template'].map((name) => (
-              <div key={name} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-yellow-500 cursor-pointer transition-colors">
-                <div className="w-full h-32 bg-zinc-800 rounded-lg mb-4 flex items-center justify-center text-4xl">📄</div>
-                <h3 className="font-semibold">{name}</h3>
-                <p className="text-sm text-gray-400 mt-1">PDF + QR + Blockchain</p>
-                <button className="mt-3 w-full bg-zinc-800 hover:bg-zinc-700 text-white py-2 rounded-lg text-sm">Use Template</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === 'verification' && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold mb-2">Certificate Verification</h3>
-            <p className="text-gray-400 mb-6">Verify authenticity via QR scan or certificate ID</p>
-            <div className="max-w-md mx-auto">
-              <input
-                type="text"
-                placeholder="Enter Certificate ID (e.g., CERT-001)"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white mb-4"
-              />
-              <button className="w-full bg-yellow-500 text-black py-3 rounded-lg font-semibold hover:bg-yellow-400">Verify Certificate</button>
-            </div>
-            <div className="mt-8 p-4 bg-zinc-800 rounded-lg max-w-md mx-auto">
-              <p className="text-sm text-gray-400">Verification Methods:</p>
-              <div className="grid grid-cols-3 gap-4 mt-3">
-                <div className="text-center">
-                  <div className="text-2xl mb-1">📱</div>
-                  <p className="text-xs text-gray-400">QR Scan</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl mb-1">🔗</div>
-                  <p className="text-xs text-gray-400">Blockchain</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl mb-1">🔢</div>
-                  <p className="text-xs text-gray-400">Barcode</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
