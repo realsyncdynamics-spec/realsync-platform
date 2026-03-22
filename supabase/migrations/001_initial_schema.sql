@@ -386,3 +386,23 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ── OPTIMUS SPACES ────────────────────────────────────────────
+-- Perplexity Spaces Konzept: Persistente Creator Research-Workspaces
+CREATE TABLE IF NOT EXISTS public.optimus_spaces (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name         TEXT NOT NULL,
+  description  TEXT,
+  context      TEXT,
+  app          TEXT,
+  icon         TEXT DEFAULT '🗂',
+  color        TEXT DEFAULT '#00D4FF',
+  messages     JSONB DEFAULT '[]'::jsonb,
+  citations    JSONB DEFAULT '[]'::jsonb,
+  total_coins  INTEGER DEFAULT 0,
+  created_at   TIMESTAMPTZ DEFAULT now(),
+  updated_at   TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.optimus_spaces ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users manage own spaces" ON public.optimus_spaces FOR ALL USING (auth.uid() = user_id);
