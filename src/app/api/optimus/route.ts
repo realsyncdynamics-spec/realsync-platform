@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model === 'deep' ? 'sonar-pro' : model === 'fast' ? 'sonar' : 'sonar',
+        model: model === 'deep' ? 'sonar-deep-research' : model === 'fast' ? 'sonar' : 'sonar-pro',
         messages,
         max_tokens: 1500,
         temperature: 0.7,
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     const detectedApps = detectApps(message + ' ' + content);
 
     // Calculate coin cost
-    const coinCost = model === 'deep' ? 30 : model === 'fast' ? 5 : 15;
+    const coinCost = model === 'deep' ? 50 : model === 'fast' ? 5 : 15;
 
     return NextResponse.json({
       response: content,

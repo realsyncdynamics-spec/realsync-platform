@@ -293,9 +293,73 @@ export const OPTIMUS_PACKAGES = [
   { id:'mega',     coins:15000, bonus:3000, price:75,  label:'Mega',     perRequests:{ turbo:3600,pro:1200,deep:600 }},
 ] as const;
 
-export const OPTIMUS_COSTS = {
+export const OPTIMUS_COSTS_DEPRECATED = {
   turbo: 5,   // sonar — schnell
   pro:   15,  // sonar-pro — präzise
   deep:  30,  // sonar-deep-research — komplex
   auto:  50,  // auto-tool execution
+} as const;
+
+// ── PERPLEXITY SONAR API — OFFIZIELLE PREISE ─────────────────
+// Stand: März 2026 · docs.perplexity.ai/pricing
+//
+// Modell            Input $/M  Output $/M  Request $/1K  Ø Kosten/req
+// sonar             $1         $1          $5            ~$0.006
+// sonar-pro         $3         $15         $6-14         ~$0.025
+// sonar-deep-research $2       $8          $5            ~$0.35-0.45
+//
+// RealSync Coins Umrechnung (100 Coins = €1):
+// sonar:              5 Coins  = €0,05  (Marge ~8x)
+// sonar-pro:         15 Coins  = €0,15  (Marge ~6x)  
+// sonar-deep-research:50 Coins = €0,50  (Marge ~1.4x)
+// Auto-Tool (agentic):75 Coins = €0,75  (mehrstufige Workflows)
+
+export const PERPLEXITY_MODELS = [
+  {
+    id:      'sonar',
+    name:    'sonar',
+    label:   '⚡ Sonar',
+    desc:    'Schnell · Echtzeit-Web · Für einfache Aufgaben',
+    pricePer1MInput:  1.00,
+    pricePer1MOutput: 1.00,
+    pricePer1KReq:    5.00,
+    avgCostPerReq:    0.006,
+    coins:   5,
+    plan:    'bronze',
+    color:   '#10B981',
+  },
+  {
+    id:      'sonar-pro',
+    name:    'sonar-pro',
+    label:   '🔍 Sonar Pro',
+    desc:    'Präzise · Mehr Citations · Tiefere Analysen',
+    pricePer1MInput:  3.00,
+    pricePer1MOutput: 15.00,
+    pricePer1KReq:    10.00,
+    avgCostPerReq:    0.027,
+    coins:   15,
+    plan:    'silber',
+    color:   '#00D4FF',
+  },
+  {
+    id:      'sonar-deep-research',
+    name:    'sonar-deep-research',
+    label:   '🧠 Sonar Deep',
+    desc:    'Multi-Step Research · Komplexe Berichte · Reasoning',
+    pricePer1MInput:  2.00,
+    pricePer1MOutput: 8.00,
+    pricePer1KReq:    5.00,
+    avgCostPerReq:    0.40,
+    coins:   50,
+    plan:    'gold',
+    color:   '#8B5CF6',
+  },
+] as const;
+
+export const OPTIMUS_COSTS = {
+  // Perplexity Sonar Modelle — echte API-Namen
+  'sonar':               5,   // $1/$1/M + $5/1K req
+  'sonar-pro':          15,   // $3/$15/M + $6-14/1K req
+  'sonar-deep-research':50,   // $2/$8/M + $3/M reasoning + $5/1K searches
+  'auto-tool':          75,   // Agentic multi-step workflows
 } as const;

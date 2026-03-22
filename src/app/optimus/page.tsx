@@ -14,9 +14,9 @@ const QUICK_ACTIONS = [
 ];
 
 const MODELS = [
-  { id:'fast',   label:'⚡ Turbo',   desc:'Schnell · 5 Coins',  color:'#10B981' },
-  { id:'sonar',  label:'🔍 Pro',     desc:'Präzise · 15 Coins', color:'#00D4FF' },
-  { id:'deep',   label:'🧠 Deep',    desc:'Komplex · 30 Coins', color:'#8B5CF6' },
+  { id:'fast',   label:'⚡ sonar',        desc:'$1/$1/M · 5 Coins',    color:'#10B981' },
+  { id:'sonar',  label:'🔍 sonar-pro',    desc:'$3/$15/M · 15 Coins',  color:'#00D4FF' },
+  { id:'deep',   label:'🧠 deep-research', desc:'$2/$8/M · 50 Coins',  color:'#8B5CF6' },
 ];
 
 const COIN_PACKAGES = [
@@ -60,7 +60,7 @@ export default function OptimusPage() {
     const text = prompt || input.trim();
     if (!text || loading) return;
 
-    const coinCost = model === 'deep' ? 30 : model === 'fast' ? 5 : 15;
+    const coinCost = model === 'deep' ? 50 : model === 'fast' ? 5 : 15;
     if (coinBalance < coinCost) { setShowPackages(true); return; }
 
     setInput('');
@@ -296,7 +296,7 @@ export default function OptimusPage() {
         </div>
         <div style={{ display:'flex', justifyContent:'space-between', marginTop:6 }}>
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.2)' }}>
-            Shift+Enter für neue Zeile · Perplexity AI mit Echtzeit-Web-Suche
+            Powered by Perplexity Sonar API · Echtzeit-Web · Quellen mit Citations
           </div>
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(201,168,76,.5)' }}>
             {MODELS.find(m=>m.id===model)?.label} · {MODELS.find(m=>m.id===model)?.desc}
