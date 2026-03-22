@@ -282,3 +282,20 @@ export const FEATURE_MATRIX = [
 ] as { feature: keyof Plan['features']; label: string; category: string }[];
 
 export const ALL_PLANS_LIST = PLAN_ORDER.map(id => PLANS[id]);
+
+// ── OPTIMUS AI COIN PACKAGES ─────────────────────────────────
+// Spezielle Coin-Pakete für KI-Anfragen via Perplexity
+
+export const OPTIMUS_PACKAGES = [
+  { id:'starter',  coins:500,   bonus:0,    price:500,   label:'Starter',  perRequests:{ turbo:100, pro:33,  deep:16  }},
+  { id:'creator',  coins:2000,  bonus:200,  price:1500,  label:'Creator',  perRequests:{ turbo:440, pro:146, deep:73  }},
+  { id:'pro',      coins:5000,  bonus:800,  price:3000,  label:'Pro',      perRequests:{ turbo:1160,pro:386, deep:193 }},
+  { id:'mega',     coins:15000, bonus:3000, price:7500,  label:'Mega',     perRequests:{ turbo:3600,pro:1200,deep:600 }},
+] as const;
+
+export const OPTIMUS_COSTS = {
+  turbo: 5,   // sonar — schnell
+  pro:   15,  // sonar-pro — präzise
+  deep:  30,  // sonar-deep-research — komplex
+  auto:  50,  // auto-tool execution
+} as const;
