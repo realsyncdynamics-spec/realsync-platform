@@ -11,6 +11,8 @@ const QUICK_ACTIONS = [
   { icon:'📊', label:'Performance analysieren', prompt:'Analysiere meine Cross-Platform Performance und zeig mir wo ich am meisten wachsen kann.' },
   { icon:'🚀', label:'Launch-Strategie',         prompt:'Erstelle eine komplette Launch-Strategie für ein neues Creator-Produkt in 7 Tagen.' },
   { icon:'🪙', label:'Coins optimieren',         prompt:'Wie verdiene ich am schnellsten mehr RealSyncCoins? Welche Strategie empfiehlst du?' },
+  { icon:'⬡', label:'Perplexity Deep Research', prompt:'Recherchiere tiefgehend: Was sind die besten KI-Tools für Creator in 2026? Erstelle einen strukturierten Report mit Citations.' },
+  { icon:'⚖️', label:'Model Council',           prompt:'Analysiere mein Creator-Geschäftsmodell aus verschiedenen Perspektiven: Wachstum, Revenue, Risiken. Nutze mehrere KI-Modelle für unterschiedliche Ansichten.' },
 ];
 
 const MODELS = [
@@ -137,7 +139,7 @@ export default function OptimusPage() {
             <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#00D4FF,#8B5CF6)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>🤖</div>
             <div>
               <div style={{ fontWeight:800, fontSize:13 }}>OPTIMUS</div>
-              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:'#10B981', letterSpacing:'.1em' }}>● ONLINE · Perplexity AI</div>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:'#10B981', letterSpacing:'.1em' }}>● ONLINE · Perplexity Sonar API</div>
             </div>
           </div>
           {activeApp && (
@@ -296,7 +298,7 @@ export default function OptimusPage() {
         </div>
         <div style={{ display:'flex', justifyContent:'space-between', marginTop:6 }}>
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.2)' }}>
-            Powered by Perplexity Sonar API · Echtzeit-Web · Quellen mit Citations
+            ⬡ Powered by Perplexity Sonar API · Echtzeit-Web-Suche · Citations · perplexity.ai/api-platform
           </div>
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(201,168,76,.5)' }}>
             {MODELS.find(m=>m.id===model)?.label} · {MODELS.find(m=>m.id===model)?.desc}

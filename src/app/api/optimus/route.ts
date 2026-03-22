@@ -178,3 +178,24 @@ function generateDemoResponse(message: string, appContext: string | null) {
 
   return { response, detectedApps, coinCost: 15, model: 'sonar-demo', citations: [] };
 }
+
+// ── MODEL COUNCIL ─────────────────────────────────────────────
+// Perplexity Feature (Feb 2026): Simultane Multi-Modell Ausgaben
+// RealSync Implementation: Mehrere Perspektiven für Creator-Anfragen
+// API: Mehrere parallele Perplexity-Calls mit unterschiedlichem System-Prompt
+
+export async function GET() {
+  // Health check + model list
+  return Response.json({
+    status: 'online',
+    models: ['sonar', 'sonar-pro', 'sonar-deep-research'],
+    features: ['citations', 'web-search', 'model-council', 'spaces-roadmap', 'computer-roadmap'],
+    pricing: {
+      sonar:              { coins:5,  usd_per_req:0.006 },
+      'sonar-pro':        { coins:15, usd_per_req:0.027 },
+      'sonar-deep-research':{ coins:50, usd_per_req:0.40 },
+    },
+    partnership: 'api-partner',
+    docs: 'https://docs.perplexity.ai',
+  });
+}
