@@ -80,6 +80,32 @@ const PRODUCTS = [
     cta:'Dashboard öffnen',
     demo:false,
   },
+  {
+    id:'waitlistkit',
+    icon:'🚀',
+    name:'WaitlistKit',
+    tagline:'Viral Launch Builder',
+    color:'#8B5CF6',
+    href:'/waitlistkit',
+    badge:null,
+    metrics:[{v:'3,2x',l:'Viral-Multiplikator'},{v:'47%',l:'Referral-Rate'},{v:'2 Min',l:'Setup'}],
+    features:['Viral Referral Loop','Custom Domain','Launch-Sequenz','Analytics Dashboard','E-Mail-Integration'],
+    cta:'Waitlist erstellen',
+    demo:true,
+  },
+  {
+    id:'contentforge',
+    icon:'✍️',
+    name:'ContentForge',
+    tagline:'KI-Content-Generator',
+    color:'#F59E0B',
+    href:'/contentforge',
+    badge:null,
+    metrics:[{v:'6',l:'Formate'},{v:'30s',l:'Generierung'},{v:'DACH',l:'Optimiert'}],
+    features:['TikTok Hooks','YouTube Titel','Instagram Captions','X Threads','Video-Skripte'],
+    cta:'Content generieren',
+    demo:true,
+  },
 ];
 
 export default function ProductsPage() {
