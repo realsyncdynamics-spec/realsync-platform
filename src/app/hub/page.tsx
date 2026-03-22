@@ -279,7 +279,7 @@ export default function HubPage() {
                 { icon:'🚀', label:'Launch Sequence starten', sub:'WaitlistKit · 847 bereit', color:'#8B5CF6', href:'/apps/waitlistkit/dashboard' },
                 { icon:'🛡', label:'Content verifizieren', sub:'CreatorSeal · QR + Blockchain', color:'#C9A84C', href:'/apps/creatorseal/dashboard' },
                 { icon:'⚡', label:'Workflow Hub', sub:'12 Workflows · 3 aktiv', color:'#00D4FF', href:'/workflows' },
-                { icon:'💎', label:'Plan upgraden', sub:'Gold → Platin · +11 Features', color:'#FFD700', href:'/pricing' },
+                { icon:'🛍', label:'RealSync Store', sub:'Coins einlösen · Bald verfügbar', color:'#C9A84C', href:'/store' },
               ].map(a=>(
                 <Link key={a.label} href={a.href} style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:10, padding:'10px 11px', background:'#0B0F18', border:'1px solid #1A2130', borderRadius:8, transition:'all .15s' }}
                   onMouseEnter={e=>{e.currentTarget.style.borderColor=a.color+'40';e.currentTarget.style.background=a.color+'08';}}

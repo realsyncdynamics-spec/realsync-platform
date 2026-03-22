@@ -308,3 +308,81 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ── CORRECTION: B2B COIN WORKFLOW ────────────────────────
+-- Creator teilt QR/Link → Jemand kauft → Creator bekommt 50%
+-- 
+-- Workflow:
+-- 1. Creator hat referral_code (z.B. "rs-dominik")
+-- 2. Jemand scannt QR → /join/rs-dominik → registriert sich
+-- 3. Neue Person kauft Paket (z.B. Bronze €19 = 1900 Cents)
+-- 4. award_referral_coins() wird aufgerufen
+-- 5. Creator (referrer) bekommt 50% = 950 Coins = €9,50
+-- 6. Creator löst Coins im RealSync Store ein
+--
+-- 100 Coins = €1 | Coins verfallen nie | Sofort gutgeschrieben
+--
+-- Store-Artikel (Coming Soon):
+-- - Pakete upgraden (Bronze=1900, Silber=4900, Gold=9900 Coins)
+-- - Creator Merch (ab 2500 Coins)
+-- - Exklusive Kurse (ab 5000 Coins)
+-- - Setup Service 1:1 (10000 Coins)
+-- - Polygon NFT Badge (25000 Coins)
+-- - Priority Feature Request (50000 Coins)
+
+-- Re-create function with correct comment
+CREATE OR REPLACE FUNCTION public.award_referral_coins(
+  p_referred_id UUID,      -- Die Person die gekauft hat
+  p_plan_id TEXT,          -- Welches Paket gekauft wurde
+  p_plan_price_cents INTEGER  -- Preis in Cents (z.B. 1900 für Bronze)
+)
+RETURNS VOID AS $$
+DECLARE
+  v_referrer_id UUID;
+  v_coins INTEGER;
+  v_referrer_username TEXT;
+BEGIN
+  -- Wer hat diese Person eingeladen?
+  SELECT r.referrer_id, p.username 
+  INTO v_referrer_id, v_referrer_username
+  FROM public.referrals r
+  JOIN public.profiles p ON p.id = r.referrer_id
+  WHERE r.referred_id = p_referred_id 
+    AND r.status IN ('pending', 'converted')
+  LIMIT 1;
+
+  IF v_referrer_id IS NOT NULL THEN
+    -- 50% des Paketpreises als Coins (Cents / 2 = Coins, da 100 Coins = €1)
+    -- Beispiel: Bronze €19 = 1900 Cents → 950 Coins = €9,50 für Creator
+    v_coins := p_plan_price_cents / 2;
+
+    -- Coins dem Creator gutschreiben
+    INSERT INTO public.coin_transactions (
+      user_id, type, amount, description, ref_user_id, ref_plan_id, metadata
+    ) VALUES (
+      v_referrer_id,
+      'referral',
+      v_coins,
+      'B2B Referral: ' || p_plan_id || ' Plan gekauft',
+      p_referred_id,
+      p_plan_id,
+      jsonb_build_object(
+        'plan_price_cents', p_plan_price_cents,
+        'commission_pct', 50,
+        'source', 'qr_referral'
+      )
+    );
+
+    -- Referral als vergütet markieren
+    UPDATE public.referrals
+    SET 
+      status = 'rewarded',
+      coin_reward = v_coins,
+      converted_plan = p_plan_id,
+      converted_at = NOW()
+    WHERE referred_id = p_referred_id;
+
+    RAISE NOTICE 'Coins vergeben: % Coins an % für % Plan', v_coins, v_referrer_username, p_plan_id;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
