@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import OptimusButton from '@/components/OptimusButton';
 
 const TRENDS = [
   {id:1, topic:'AI-generierter Content',    score:98, velocity:'+142%', platform:'TikTok',    category:'Tech',      status:'exploding', posts:'2.4M', engagement:'12.8%'},

@@ -1,5 +1,6 @@
 'use client';
 
+import OptimusButton from '@/components/OptimusButton';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { PlanId, PLANS as PLAN_DATA, hasFeature } from '@/lib/plans';
