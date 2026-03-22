@@ -76,7 +76,8 @@ const RECENT_ACTIVITY = [
   { icon:'⭐', app:'ReviewRadar', text:'Neue 1★ Review von Peter W.', time:'vor 8h', color:'#EF4444', urgent:true },
   { icon:'💳', app:'ChurnRescue', text:'StartupHub GmbH — €99 Retry geplant', time:'vor 2h', color:'#3B82F6', urgent:false },
   { icon:'🚀', app:'WaitlistKit', text:'max@startup.de — +12 neue Referrals', time:'vor 5 Min', color:'#8B5CF6', urgent:false },
-  { icon:'🛡', app:'CreatorSeal', text:'Neuer Content verifiziert · SHA-256 OK', time:'vor 1 Min', color:'#C9A84C', urgent:false },
+  { icon:'🎯', app:'DealFlow', text:'TechGear Pro — Affiliate Deal €500/Mo', time:'vor 30min', color:'#10B981', urgent:false },
+    { icon:'🛡', app:'CreatorSeal', text:'Neuer Content verifiziert · SHA-256 OK', time:'vor 1 Min', color:'#C9A84C', urgent:false },
   { icon:'🚀', app:'WaitlistKit', text:'Signup #848 — via Twitter', time:'vor 3 Min', color:'#8B5CF6', urgent:false },
 ];
 
