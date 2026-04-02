@@ -28,7 +28,7 @@ export default function AnalyticsPage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- supabase client is stable
 
   const cards = [
     { label: 'Gesamt Posts', value: stats.total, color: 'text-yellow-300' },

@@ -38,7 +38,7 @@ export default function BillingPage() {
       if (data) setSubscription(data);
       setLoading(false);
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- supabase client is stable
 
   const handleCheckout = async (priceId: string, planId: string) => {
     setCheckoutLoading(planId);

@@ -1,5 +1,5 @@
 import AppLandingPage from '@/components/AppLandingPage';
-import { Palette, Image, Type, Sparkles } from 'lucide-react';
+import { Palette, Image as ImageIcon, Type, Sparkles } from 'lucide-react';
 
 export default function BrandKitPage() {
   return (
@@ -11,7 +11,7 @@ export default function BrandKitPage() {
       ctaText="Brand Erstellen"
       features={[
         { icon: <Palette size={20} />, title: 'Brand Colors', desc: 'KI-generierte Farbpaletten passend zu deiner Marke' },
-        { icon: <Image size={20} />, title: 'Logo Generator', desc: 'Professionelle Logos in Sekunden erstellen' },
+        { icon: <ImageIcon size={20} />, title: 'Logo Generator', desc: 'Professionelle Logos in Sekunden erstellen' },
         { icon: <Type size={20} />, title: 'Typography', desc: 'Automatische Font-Paarungen und Hierarchien' },
         { icon: <Sparkles size={20} />, title: 'Style Guide', desc: 'Komplette Brand Guidelines automatisch generiert' },
       ]}

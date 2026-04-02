@@ -119,7 +119,7 @@ export default function ReviewRadarLanding() {
                       <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:'#00D4FF',fontWeight:700}}>{r.platform}</span>
                       <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:'rgba(255,255,255,.25)'}}>{r.time}</span>
                     </div>
-                    <div style={{fontSize:12,color:'rgba(255,255,255,.7)',lineHeight:1.5,marginBottom:10}}>"{r.text}"</div>
+                    <div style={{fontSize:12,color:'rgba(255,255,255,.7)',lineHeight:1.5,marginBottom:10}}>&ldquo;{r.text}&rdquo;</div>
 
                     {/* Reply if generated */}
                     {replies[r.id] && (

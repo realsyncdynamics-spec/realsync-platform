@@ -107,7 +107,7 @@ export default function OnboardingPage() {
               <button onClick={()=>setStep(1)}
                 className="w-full py-3 font-black text-sm rounded-xl text-black"
                 style={{background:'linear-gradient(135deg,#00D4FF,#0070F3)'}}>
-                Los geht's →
+                Los geht&apos;s →
               </button>
             </div>
           )}
@@ -211,7 +211,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-xs font-mono text-gray-400 text-left mb-5">
-                <div className="text-green-400 mb-1">// So funktioniert's:</div>
+                <div className="text-green-400 mb-1">// So funktioniert&apos;s:</div>
                 <div>1. QR in Bio / Video / Story posten</div>
                 <div>2. Fan scannt → landet auf deiner Seite</div>
                 <div>3. Registriert sich → du bekommst 50% Coins</div>

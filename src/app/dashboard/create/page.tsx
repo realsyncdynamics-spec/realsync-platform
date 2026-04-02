@@ -17,7 +17,7 @@ export default function CreatePostPage() {
     supabase.from('social_accounts').select('*').then(({ data }) => {
       if (data) setAccounts(data);
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- supabase client is stable
 
   const togglePlatform = (id: string) => {
     setPlatforms(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);

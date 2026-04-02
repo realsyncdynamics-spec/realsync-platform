@@ -94,7 +94,7 @@ export default function ChurnRescueLanding() {
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10}}>
             <div>
               <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'#3B82F6',letterSpacing:'.2em',textTransform:'uppercase',marginBottom:4}}>// LIVE DEMO · Failed Payments</div>
-              <div style={{fontWeight:800,fontSize:16}}>Klick auf "Retry" um die KI zu testen</div>
+              <div style={{fontWeight:800,fontSize:16}}>Klick auf &ldquo;Retry&rdquo; um die KI zu testen</div>
             </div>
             {totalSaved > 0 && (
               <div style={{background:'rgba(16,185,129,.1)',border:'1px solid rgba(16,185,129,.3)',borderRadius:10,padding:'8px 16px',textAlign:'center'}}>

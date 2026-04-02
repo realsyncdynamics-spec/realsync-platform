@@ -69,7 +69,7 @@ export default function AboutPage() {
         <div style={{background:'rgba(201,168,76,.06)',border:'1px solid rgba(201,168,76,.2)',borderRadius:16,padding:'28px',marginBottom:32}}>
           <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'#C9A84C',letterSpacing:'.2em',textTransform:'uppercase',marginBottom:12}}>// Mission</div>
           <p style={{fontSize:16,lineHeight:1.8,color:'rgba(255,255,255,.8)',fontWeight:700}}>
-            "Jeden Creator im DACH-Markt mit den Tools auszustatten, die bisher nur großen Agenturen zur Verfügung standen — automatisiert, KI-gestützt und zu Creator-freundlichen Preisen."
+            &ldquo;Jeden Creator im DACH-Markt mit den Tools auszustatten, die bisher nur großen Agenturen zur Verfügung standen — automatisiert, KI-gestützt und zu Creator-freundlichen Preisen.&rdquo;
           </p>
         </div>
 

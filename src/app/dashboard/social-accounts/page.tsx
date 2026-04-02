@@ -20,13 +20,14 @@ export default function SocialAccountsPage() {
   const [showForm, setShowForm] = useState(false);
   const [msg, setMsg] = useState('');
 
-  const load = async () => {
-    const { data } = await supabase.from('social_accounts').select('*').order('created_at', { ascending: false });
-    if (data) setAccounts(data);
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from('social_accounts').select('*').order('created_at', { ascending: false });
+      if (data) setAccounts(data);
+      setLoading(false);
+    };
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- supabase client is stable
 
   const handleAdd = async () => {
     setConnecting(form.platform);

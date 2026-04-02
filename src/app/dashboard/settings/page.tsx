@@ -18,7 +18,7 @@ export default function SettingsPage() {
         setName(user.user_metadata?.full_name || '');
       }
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- supabase client is stable
 
   const handleSave = async () => {
     setSaving(true);
