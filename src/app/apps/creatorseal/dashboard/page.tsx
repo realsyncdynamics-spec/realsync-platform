@@ -100,6 +100,13 @@ export default function CreatorSealDashboard() {
         </div>
       </div>
 
+      {/* Demo notice */}
+      <div style={{ background:'rgba(245,158,11,.05)', borderBottom:'1px solid rgba(245,158,11,.12)', padding:'7px 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+        <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(245,158,11,.6)' }}>
+          ◌ Demo-Daten · Echte Werte werden nach Verbinden deines Kanals angezeigt
+        </span>
+      </div>
+
       {/* Tabs */}
       <div style={{ background:'#080C14', borderBottom:'1px solid #1A2130', padding:'0 20px', display:'flex', gap:4 }}>
         {[

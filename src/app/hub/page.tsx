@@ -45,30 +45,30 @@ const APPS = [
   {
     id:'adengine', name:'AdEngine', icon:'📺', color:'#FF6888',
     desc:'KI-Werbung für 7 Kanäle',
-    href:'/',
+    href:'/apps/adengine/dashboard',
     stats:[{v:'7',l:'Kanäle'},{v:'KI',l:'Generation'},{v:'DACH',l:'First'}],
-    status:'beta', badge:null,
+    status:'beta', badge:'Beta',
   },
   {
     id:'datacore', name:'DataCore', icon:'📊', color:'#00F0FF',
     desc:'Analytics & BI Dashboard',
-    href:'/',
-    stats:[{v:'∞',l:'KPIs'},{v:'Live',l:'Echtzeit'},{v:'API',l:'Export'}],
-    status:'live', badge:null,
+    href:'/apps/analyticspro/dashboard',
+    stats:[{v:'—',l:'KPIs'},{v:'—',l:'Echtzeit'},{v:'API',l:'Export'}],
+    status:'coming-soon', badge:'Bald',
   },
   {
     id:'socialhub', name:'SocialHub', icon:'📱', color:'#80FFC0',
     desc:'Social Media Manager',
-    href:'/',
-    stats:[{v:'6',l:'Plattformen'},{v:'E2E',l:'Encrypted'},{v:'EU',l:'Server'}],
-    status:'live', badge:null,
+    href:'/dashboard/social-accounts',
+    stats:[{v:'—',l:'Plattformen'},{v:'—',l:'Encrypted'},{v:'EU',l:'Server'}],
+    status:'coming-soon', badge:'Bald',
   },
   {
     id:'optimus', name:'Optimus KI', icon:'🤖', color:'#60D0FF',
     desc:'9 KI-Modelle · Perplexity-First',
-    href:'/',
-    stats:[{v:'9',l:'Modelle'},{v:'Perp.',l:'Primary'},{v:'€0',l:'Kosten'}],
-    status:'live', badge:null,
+    href:'/optimus',
+    stats:[{v:'Beta',l:'Modelle'},{v:'Perp.',l:'Primary'},{v:'—',l:'Kosten'}],
+    status:'beta', badge:'Beta',
   },
 ];
 
@@ -154,6 +154,14 @@ export default function HubPage() {
         </div>
       )}
 
+      {/* ── DEMO NOTICE ── */}
+      <div style={{ background:'rgba(245,158,11,.05)', borderBottom:'1px solid rgba(245,158,11,.15)', padding:'8px 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+        <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(245,158,11,.7)' }}>
+          ◌ Demo-Ansicht — Daten werden nach Login durch dein echtes Konto ersetzt
+        </span>
+        <Link href="/login" style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'#C9A84C', textDecoration:'none' }}>Einloggen →</Link>
+      </div>
+
       <div style={{ maxWidth:1200, margin:'0 auto', padding:'24px 20px' }}>
 
         {/* ── CREATOR HEADER ── */}
@@ -224,8 +232,8 @@ export default function HubPage() {
                     </div>
                     <div style={{ display:'flex', gap:4 }}>
                       {app.badge&&<span style={{ fontFamily:"'DM Mono',monospace", fontSize:8, padding:'1px 5px', background:app.color+'20', border:`1px solid ${app.color}40`, color:app.color, borderRadius:3 }}>{app.badge}</span>}
-                      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:8, padding:'1px 5px', background: app.status==='live'?'#10B98115':'#FFD70015', border:`1px solid ${app.status==='live'?'#10B98130':'#FFD70030'}`, color: app.status==='live'?'#10B981':'#FFD700', borderRadius:3 }}>
-                        {app.status==='live'?'LIVE':'BETA'}
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:8, padding:'1px 5px', background: app.status==='live'?'#10B98115':app.status==='beta'?'#FFD70015':'rgba(255,255,255,.04)', border:`1px solid ${app.status==='live'?'#10B98130':app.status==='beta'?'#FFD70030':'rgba(255,255,255,.1)'}`, color: app.status==='live'?'#10B981':app.status==='beta'?'#FFD700':'rgba(255,255,255,.3)', borderRadius:3 }}>
+                        {app.status==='live'?'LIVE':app.status==='beta'?'BETA':'BALD'}
                       </span>
                     </div>
                   </div>
@@ -250,7 +258,7 @@ export default function HubPage() {
           {/* Recent Activity */}
           <div style={{ background:'#080C14', border:'1px solid #1A2130', borderRadius:12, overflow:'hidden' }}>
             <div style={{ padding:'12px 16px', borderBottom:'1px solid #1A2130', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.35)', letterSpacing:'.12em', textTransform:'uppercase' }}>// Live Aktivität</span>
+              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.35)', letterSpacing:'.12em', textTransform:'uppercase' }}>// Beispiel-Aktivität</span>
               <Link href="/workflows" style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(0,212,255,.5)', textDecoration:'none' }}>⚡ Workflows →</Link>
             </div>
             {RECENT_ACTIVITY.map((a,i)=>(
