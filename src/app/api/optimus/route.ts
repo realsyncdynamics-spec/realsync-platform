@@ -165,7 +165,7 @@ function generateDemoResponse(message: string, appContext: string | null) {
       { app: 'ReviewRadar', route: '/apps/reviewradar/dashboard', reason: 'Review-Antworten' },
     ];
   } else if (lower.includes('trend') || lower.includes('viral')) {
-    response = `## 📡 Trend-Analyse (Echtzeit)\n\n**Top-Trends für Creator jetzt:**\n\n1. 🔥 **AI-Content Tools** — +142% · TikTok explodiert\n2. 📈 **Creator Economy 2026** — +89% · YouTube/LinkedIn\n3. ⚡ **Deepfake Detection** — +234% · X/Twitter viral\n\n**Sofort-Aktion empfohlen:**\n→ ContentForge: Hook zu "AI-Content Tools" generieren\n→ ScheduleMaster: Post für heute 19:00 Uhr einplanen\n→ AdEngine: TikTok-Ad auf Trend aufspringen\n\n*Analysiert via Perplexity Sonar · Real-time Web Search*`;
+    response = `## 📡 Trend-Analyse (Demo)\n\n⚠️ *Demo-Modus — kein PERPLEXITY_API_KEY konfiguriert. Echte Echtzeit-Trends nicht verfügbar.*\n\n**Beispiel-Trends (nicht aktuell):**\n\n1. AI-Content Tools\n2. Creator Economy\n3. Deepfake Detection\n\n*Für echte Trend-Analyse: PERPLEXITY_API_KEY in den Einstellungen hinterlegen.*`;
     detectedApps = [
       { app: 'TrendRadar', route: '/apps/trendradar/dashboard', reason: 'Live Trends' },
       { app: 'ContentForge', route: '/apps/contentforge/dashboard', reason: 'Trend-Content' },
@@ -176,7 +176,16 @@ function generateDemoResponse(message: string, appContext: string | null) {
     detectedApps = [];
   }
 
-  return { response, detectedApps, coinCost: 15, model: 'sonar-demo', citations: [] };
+  // Prepend demo warning to all responses when running without a real API key
+  const demoHeader = `> ⚠️ **Demo-Modus** — PERPLEXITY_API_KEY nicht konfiguriert. Diese Antwort ist kein echtes KI-Ergebnis.\n\n`;
+  return {
+    response: demoHeader + response,
+    detectedApps,
+    coinCost: 0,
+    model: 'demo',
+    demo: true,
+    citations: [],
+  };
 }
 
 // ── MODEL COUNCIL ─────────────────────────────────────────────
@@ -185,17 +194,17 @@ function generateDemoResponse(message: string, appContext: string | null) {
 // API: Mehrere parallele Perplexity-Calls mit unterschiedlichem System-Prompt
 
 export async function GET() {
-  // Health check + model list
+  const hasKey = !!process.env.PERPLEXITY_API_KEY;
   return Response.json({
-    status: 'online',
-    models: ['sonar', 'sonar-pro', 'sonar-deep-research'],
-    features: ['citations', 'web-search', 'model-council', 'spaces-roadmap', 'computer-roadmap'],
+    status: hasKey ? 'online' : 'demo',
+    configured: hasKey,
+    models: hasKey ? ['sonar', 'sonar-pro', 'sonar-deep-research'] : [],
+    message: hasKey ? 'OPTIMUS ist aktiv.' : 'PERPLEXITY_API_KEY fehlt — OPTIMUS läuft im Demo-Modus.',
     pricing: {
-      sonar:              { coins:5,  usd_per_req:0.006 },
-      'sonar-pro':        { coins:15, usd_per_req:0.027 },
-      'sonar-deep-research':{ coins:50, usd_per_req:0.40 },
+      sonar:                  { coins: 5,  usd_per_req: 0.006 },
+      'sonar-pro':            { coins: 15, usd_per_req: 0.027 },
+      'sonar-deep-research':  { coins: 50, usd_per_req: 0.40  },
     },
-    partnership: 'api-partner',
     docs: 'https://docs.perplexity.ai',
   });
 }
