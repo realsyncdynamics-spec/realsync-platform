@@ -143,7 +143,7 @@ function LoginContent() {
             <div style={{ marginBottom:16 }}>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
                 <label style={{ fontFamily:"'DM Mono',monospace", fontSize:9, letterSpacing:'.14em', color:'rgba(255,255,255,.35)', textTransform:'uppercase' }}>Passwort</label>
-                <Link href="#" style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(0,212,255,.5)', textDecoration:'none' }}>Vergessen?</Link>
+                <Link href="/forgot-password" style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(0,212,255,.5)', textDecoration:'none' }}>Vergessen?</Link>
               </div>
               <div style={{ position:'relative' }}>
                 <input type={showPass?'text':'password'} value={password} onChange={e=>{setPassword(e.target.value);setError('');}} placeholder="••••••••" autoComplete="current-password"

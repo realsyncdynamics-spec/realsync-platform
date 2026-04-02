@@ -12,27 +12,27 @@ const NAV_LINKS = [
 ];
 
 const TICKER_ITEMS = [
-  '🛡 C2PA 2.3 verifiziert', '⛓ Blockchain-Timestamp', '🤖 Deepfake-Erkennung 98%',
-  '⭐ KI-Reviews in 3 Min', '💳 72% Payment-Recovery', '🎯 Brand-Matching via KI',
+  '🛡 C2PA 2.3 Standard', '⛓ Blockchain-Timestamp', '🤖 Deepfake-Erkennung (Beta)',
+  '⭐ KI-Reviews', '💳 Payment-Recovery (Beta)', '🎯 Brand-Matching via KI',
   '⬡ Perplexity AI-Agent', '🪙 RealSyncCoins Ökosystem', '🚀 DACH-Creator-Markt',
 ];
 
 const HERO_STATS = [
-  { v:'16',     l:'Apps',            c:'#C9A84C' },
-  { v:'4.900+', l:'Creator',         c:'#00D4FF' },
-  { v:'€0,00',  l:'Startup-Kosten',  c:'#10B981' },
-  { v:'⬡',      l:'Perplexity AI',   c:'#8B5CF6' },
+  { v:'16',    l:'Apps',           c:'#C9A84C' },
+  { v:'Beta',  l:'Early Access',   c:'#00D4FF' },
+  { v:'€0,00', l:'Startup-Kosten', c:'#10B981' },
+  { v:'⬡',     l:'Perplexity AI',  c:'#8B5CF6' },
 ];
 
 const PRODUCTS = [
   { icon:'🛡', name:'CreatorSeal',  color:'#C9A84C', desc:'Trust-Score + C2PA + 7-Tage-Promo',    href:'/creatorseal',  badge:'Signature' },
-  { icon:'⭐', name:'ReviewRadar',  color:'#00D4FF', desc:'KI-Antworten auf alle Reviews',         href:'/reviewradar',  badge:'Live Demo' },
+  { icon:'⭐', name:'ReviewRadar',  color:'#00D4FF', desc:'KI-Antworten auf alle Reviews',         href:'/reviewradar',  badge:'Beta' },
   { icon:'💳', name:'ChurnRescue',  color:'#3B82F6', desc:'72% Failed Payments gerettet',          href:'/churnrescue',  badge:'NEU'       },
   { icon:'🎯', name:'DealFlow',     color:'#10B981', desc:'Brand-Matching via OPTIMUS',            href:'/dealflow',     badge:null        },
   { icon:'🚀', name:'WaitlistKit',  color:'#8B5CF6', desc:'Viral Launch Builder · 3,2x Growth',   href:'/waitlistkit',  badge:null        },
   { icon:'✍️', name:'ContentForge', color:'#F59E0B', desc:'KI-Content · 6 Formate · 30 Sekunden', href:'/contentforge', badge:null        },
   { icon:'📡', name:'TrendRadar',   color:'#EF4444', desc:'Virale Trends vor allen anderen',       href:'/apps/trendradar/dashboard',  badge:null },
-  { icon:'📊', name:'AnalyticsPro', color:'#06B6D4', desc:'Cross-Platform Analytics',             href:'/apps/analyticspr/dashboard', badge:null },
+  { icon:'📊', name:'AnalyticsPro', color:'#06B6D4', desc:'Cross-Platform Analytics',             href:'/apps/analyticspro/dashboard', badge:null },
   { icon:'🤖', name:'OPTIMUS',      color:'#8B5CF6', desc:'KI-Agent · Perplexity · Model Council',href:'/optimus',      badge:'KI'        },
 ];
 
@@ -161,7 +161,7 @@ export default function HomePage() {
             <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:'linear-gradient(90deg,#C9A84C,#FFD700,#00D4FF)'}}/>
             <div style={{position:'absolute',top:0,bottom:0,width:2,background:'linear-gradient(180deg,transparent,rgba(0,212,255,.3),transparent)',left:'50%',animation:'scan 2s ease-in-out infinite',pointerEvents:'none'}}/>
             <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,.3)',letterSpacing:'.15em',textTransform:'uppercase',marginBottom:16}}>
-              ● LIVE · DACH Creator Scores
+              ◌ Beispiel-Daten · DACH Creator Scores
             </div>
             {/* Rotating creator */}
             <div style={{marginBottom:18}}>
@@ -303,7 +303,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div style={{marginTop:16,fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,.15)'}}>
-            🔒 DSGVO · Kein Kreditkarte nötig · Server 🇩🇪 · C2PA 2.3 · SOC2 (Enterprise)
+            🔒 DSGVO · Keine Kreditkarte nötig · C2PA 2.3
           </div>
         </div>
       </div>
@@ -316,8 +316,11 @@ export default function HomePage() {
             <span style={{fontWeight:800,fontSize:12}}>RealSync<span style={{color:'#C9A84C'}}>Dynamics</span></span>
             <span style={{fontFamily:"'DM Mono',monospace",fontSize:8,color:'rgba(255,255,255,.2)',marginLeft:8}}>© 2026 · Neuhaus am Rennweg · Deutschland</span>
           </div>
-          <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
-            {['/products','Products'],['/pricing','Preise'],['/about','Über uns'],['/perplexity','⬡ Perplexity'],['/setup','Setup'],['/launch','Launch'].map(([href,label])=>(
+          <div style={{display:'flex',gap:16,flexWrap:'wrap',alignItems:'center'}}>
+            {([
+              ['/products','Produkte'],['/pricing','Preise'],['/about','Über uns'],
+              ['/impressum','Impressum'],['/datenschutz','Datenschutz'],['/agb','AGB'],
+            ] as [string,string][]).map(([href,label])=>(
               <Link key={href} href={href} style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,.25)'}}>
                 {label}
               </Link>
