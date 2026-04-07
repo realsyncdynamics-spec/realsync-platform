@@ -1,31 +1,28 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { PLANS, PLAN_ORDER, type PlanId } from '@/lib/plans';
 
-const PLANS = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    price: 29,
-    features: ['50 Posts/Monat', '2 Social-Konten', 'Basis-Analytics', 'E-Mail-Support'],
-    priceId: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || '',
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: 79,
-    features: ['Unbegrenzte Posts', '10 Social-Konten', 'Erweiterte Analytics', 'Creator Verifizierung', 'Priority-Support'],
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || '',
-    popular: true,
-  },
-  {
-    id: 'agency',
-    name: 'Agency',
-    price: 199,
-    features: ['Alles aus Pro', 'Unbegrenzte Konten', 'Team-Zugang (5 User)', 'API-Zugang', 'Dedizierter Support'],
-    priceId: process.env.NEXT_PUBLIC_STRIPE_AGENCY_PRICE_ID || '',
-  },
-];
+// Paid plans derived from the central plan system
+const BILLING_PLANS = PLAN_ORDER
+  .filter((id): id is Exclude<PlanId, 'gratis'> => id !== 'gratis')
+  .map(id => ({
+    id,
+    name: PLANS[id].name,
+    emoji: PLANS[id].emoji,
+    price: PLANS[id].price.monthly,
+    features: (() => {
+      switch (id) {
+        case 'bronze': return ['50 KI-Antworten/Mo', '3 Plattformen', 'Wasserzeichen', 'E-Mail-Support'];
+        case 'silber': return ['500 KI-Antworten/Mo', '5 Plattformen', 'Blockchain Zeitstempel', 'Bulk-Aktionen', 'Priority-Support'];
+        case 'gold': return ['2.000 KI-Antworten/Mo', 'Alle Plattformen', 'C2PA 2.3', 'Automation', 'Creator-Website'];
+        case 'platin': return ['10.000 KI-Antworten/Mo', 'White-Label', 'Custom Domain', 'Unbegrenzte API', 'Slack-Support'];
+        case 'diamant': return ['Unbegrenzt KI', 'Alles aus Platin', 'Dedicated Manager', 'Custom Entwicklung', 'SLA 99.99%'];
+        default: return [];
+      }
+    })(),
+    popular: id === 'gold',
+  }));
 
 export default function BillingPage() {
   const supabase = createClient();
@@ -40,15 +37,19 @@ export default function BillingPage() {
     });
   }, []);
 
-  const handleCheckout = async (priceId: string, planId: string) => {
+  const handleCheckout = async (planId: string) => {
     setCheckoutLoading(planId);
     try {
-      const res = await fetch('/api/checkout', {
+      const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ planId, billing: 'monthly' }),
       });
       const data = await res.json();
+      if (data.error) {
+        console.error('Checkout error:', data.message);
+        return;
+      }
       if (data.url) window.location.href = data.url;
     } catch (e) {
       console.error(e);
@@ -62,27 +63,35 @@ export default function BillingPage() {
       <h1 className="text-2xl font-bold text-yellow-300 mb-2">Abonnement & Abrechnung</h1>
       {subscription && (
         <div className="mb-6 p-4 bg-green-950 border border-green-800 rounded-xl">
-          <p className="text-green-400 font-semibold text-sm">✓ Aktives Abonnement: <span className="capitalize">{subscription.plan_id}</span></p>
+          <p className="text-green-400 font-semibold text-sm">
+            ✓ Aktives Abonnement: <span className="capitalize">{subscription.plan_id}</span>
+          </p>
           {subscription.current_period_end && (
-            <p className="text-green-600 text-xs mt-1">Verlängert am: {new Date(subscription.current_period_end * 1000).toLocaleDateString('de-DE')}</p>
+            <p className="text-green-600 text-xs mt-1">
+              Verlängert am: {new Date(subscription.current_period_end * 1000).toLocaleDateString('de-DE')}
+            </p>
           )}
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {PLANS.map(plan => (
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {BILLING_PLANS.map(plan => (
           <div
             key={plan.id}
-            className={`relative p-6 rounded-xl border transition-colors ${
+            className={`relative p-5 rounded-xl border transition-colors ${
               plan.popular
                 ? 'border-yellow-500 bg-yellow-950/20'
                 : 'border-zinc-800 bg-zinc-900'
             }`}
           >
             {plan.popular && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-yellow-400 text-zinc-950 text-xs font-bold rounded-full">Beliebt</span>
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-yellow-400 text-zinc-950 text-xs font-bold rounded-full">
+                Beliebt
+              </span>
             )}
-            <h2 className="text-lg font-bold text-yellow-300">{plan.name}</h2>
-            <p className="text-3xl font-bold text-zinc-100 my-3">€{plan.price}<span className="text-sm font-normal text-zinc-500">/Monat</span></p>
+            <h2 className="text-lg font-bold text-yellow-300">{plan.emoji} {plan.name}</h2>
+            <p className="text-3xl font-bold text-zinc-100 my-3">
+              €{plan.price}<span className="text-sm font-normal text-zinc-500">/Monat</span>
+            </p>
             <ul className="space-y-2 mb-6">
               {plan.features.map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-zinc-300">
@@ -91,7 +100,7 @@ export default function BillingPage() {
               ))}
             </ul>
             <button
-              onClick={() => handleCheckout(plan.priceId, plan.id)}
+              onClick={() => handleCheckout(plan.id)}
               disabled={!!checkoutLoading || subscription?.plan_id === plan.id}
               className={`w-full py-2 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50 ${
                 plan.popular

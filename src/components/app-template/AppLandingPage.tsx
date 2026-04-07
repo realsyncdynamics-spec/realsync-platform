@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
-import { UNIFIED_PRICES } from '@/lib/stripe/plans-config';
+import { PLANS } from '@/lib/plans';
 
 interface Feature { icon: ReactNode; title: string; desc: string; }
 interface Plan { id: string; name: string; price: number; priceId?: string; features: string[]; }
