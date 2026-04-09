@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-const PLANS = {
-  bronze:  { name:'Bronze',  cents:1900 },
-  silber:  { name:'Silber',  cents:4900 },
-  gold:    { name:'Gold',    cents:9900 },
-  platin:  { name:'Platin',  cents:19900 },
-  diamant: { name:'Diamant', cents:49900 },
-} as const;
+import { PLANS as CENTRAL_PLANS, type PlanId } from '@/lib/plans';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,10 +12,20 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 });
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: true, message: 'Nicht eingeloggt', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
 
-    const plan = PLANS[planId as keyof typeof PLANS];
-    if (!plan) return NextResponse.json({ error: 'Ungültiger Plan' }, { status: 400 });
+    const plan = CENTRAL_PLANS[planId as PlanId];
+    if (!plan || planId === 'gratis') {
+      return NextResponse.json(
+        { error: true, message: 'Ungültiger Plan', code: 'INVALID_PLAN' },
+        { status: 400 }
+      );
+    }
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -35,7 +38,12 @@ export async function POST(request: NextRequest) {
     // Get price ID from env
     const priceKey = `STRIPE_${planId.toUpperCase()}_${billing === 'yearly' ? 'YEARLY_' : ''}PRICE_ID`;
     const priceId = process.env[priceKey];
-    if (!priceId) return NextResponse.json({ error: `Stripe Preis-ID fehlt: ${priceKey}` }, { status: 500 });
+    if (!priceId) {
+      return NextResponse.json(
+        { error: true, message: `Stripe Preis-ID fehlt: ${priceKey}`, code: 'MISSING_STRIPE_PRICE' },
+        { status: 500 }
+      );
+    }
 
     // Get or create Stripe customer
     let stripeCustomerId = (profile as any)?.stripe_customer_id;
@@ -64,6 +72,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
     console.error('[Stripe Checkout]', err);
-    return NextResponse.json({ error: err.message || 'Checkout fehlgeschlagen' }, { status: 500 });
+    return NextResponse.json(
+      { error: true, message: err.message || 'Checkout fehlgeschlagen', code: 'CHECKOUT_FAILED' },
+      { status: 500 }
+    );
   }
 }

@@ -13,20 +13,4 @@ export function getStripe(): Stripe {
   return _stripe;
 }
 
-export const PLANS = {
-  free: {
-    name: "Free",
-    prices: {},
-    limits: { posts_per_month: 50, team_members: 1 },
-  },
-  starter: {
-    name: "Starter",
-    prices: { ads: "price_ads_starter", analytics: "price_analytics_starter" },
-    limits: { posts_per_month: 500, team_members: 3 },
-  },
-  pro: {
-    name: "Pro",
-    prices: { ads: "price_ads_pro", analytics: "price_analytics_pro" },
-    limits: { posts_per_month: 5000, team_members: 10 },
-  },
-};
+// Pricing is defined in @/lib/plans.ts — import { PLANS } from '@/lib/plans' for plan data.
