@@ -38,6 +38,12 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   referral_code   TEXT UNIQUE,             -- for /join/[code]
   referred_by     UUID REFERENCES public.profiles(id),
 
+  -- Admin
+  is_admin        BOOLEAN NOT NULL DEFAULT false,
+
+  -- Stripe
+  stripe_customer_id TEXT,
+
   -- Meta
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   updated_at      TIMESTAMPTZ DEFAULT NOW()

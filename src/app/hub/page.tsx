@@ -1,45 +1,37 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { PLANS, PlanId } from '@/lib/plans';
-
-const CREATOR = {
-  name: 'Dominik Steiner',
-  username: 'dominik_steiner',
-  plan: 'gold' as PlanId,
-  avatar: '🎬',
-  trustScore: 98.2,
-  code: 'RS-2026-D5T8K1',
-  joinDate: 'März 2026',
-};
 
 const APPS = [
   {
     id:'creatorseal', name:'CreatorSeal', icon:'🛡', color:'#C9A84C',
     desc:'Verifikation, QR-Code, Creator-Profil',
     href:'/apps/creatorseal/dashboard',
-    stats:[{v:'142',l:'Verifiziert'},{v:'98.2',l:'Trust Score'},{v:'5/6',l:'Verify Level'}],
+    stats:[{v:'—',l:'Verifiziert'},{v:'—',l:'Trust Score'},{v:'—',l:'Verify Level'}],
     status:'live', badge:'Flagship',
   },
   {
     id:'reviewradar', name:'ReviewRadar', icon:'⭐', color:'#3B82F6',
     desc:'Review-Management & KI-Antworten',
     href:'/apps/reviewradar/dashboard',
-    stats:[{v:'6',l:'Reviews'},{v:'3.3★',l:'Ø Rating'},{v:'4',l:'Offen'}],
+    stats:[{v:'—',l:'Reviews'},{v:'—',l:'Ø Rating'},{v:'—',l:'Offen'}],
     status:'live', badge:null,
   },
   {
     id:'churnrescue', name:'ChurnRescue', icon:'💳', color:'#EF4444',
     desc:'Failed Payments & Win-Back',
     href:'/apps/churnrescue/dashboard',
-    stats:[{v:'€328',l:'Gerettet'},{v:'72%',l:'Recovery'},{v:'3',l:'Offen'}],
+    stats:[{v:'—',l:'Gerettet'},{v:'—',l:'Recovery'},{v:'—',l:'Offen'}],
     status:'live', badge:null,
   },
   {
     id:'waitlistkit', name:'WaitlistKit', icon:'🚀', color:'#8B5CF6',
     desc:'Viral Waitlist & Referral System',
     href:'/apps/waitlistkit/dashboard',
-    stats:[{v:'847',l:'Signups'},{v:'+23',l:'Heute'},{v:'68%',l:'Via Referral'}],
+    stats:[{v:'—',l:'Signups'},{v:'—',l:'Heute'},{v:'—',l:'Via Referral'}],
     status:'live', badge:null,
   },
   {
@@ -72,20 +64,67 @@ const APPS = [
   },
 ];
 
-const RECENT_ACTIVITY = [
-  { icon:'⭐', app:'ReviewRadar', text:'Neue 1★ Review von Peter W.', time:'vor 8h', color:'#EF4444', urgent:true },
-  { icon:'💳', app:'ChurnRescue', text:'StartupHub GmbH — €99 Retry geplant', time:'vor 2h', color:'#3B82F6', urgent:false },
-  { icon:'🚀', app:'WaitlistKit', text:'max@startup.de — +12 neue Referrals', time:'vor 5 Min', color:'#8B5CF6', urgent:false },
-  { icon:'🎯', app:'DealFlow', text:'TechGear Pro — Affiliate Deal €500/Mo', time:'vor 30min', color:'#10B981', urgent:false },
-    { icon:'🛡', app:'CreatorSeal', text:'Neuer Content verifiziert · SHA-256 OK', time:'vor 1 Min', color:'#C9A84C', urgent:false },
-  { icon:'🚀', app:'WaitlistKit', text:'Signup #848 — via Twitter', time:'vor 3 Min', color:'#8B5CF6', urgent:false },
-];
+interface Profile {
+  id: string;
+  username: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  plan_id: PlanId;
+  trust_score: number | null;
+  coin_balance: number;
+  creator_code: string | null;
+  verify_level: number | null;
+}
 
 export default function HubPage() {
-  const plan = PLANS[CREATOR.plan];
+  const router = useRouter();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [notifOpen, setNotifOpen] = useState(false);
 
-  const totalFollowers = '61.4K';
+  useEffect(() => {
+    // createClient() is called inside useEffect so it never runs during server prerender
+    const supabase = createClient();
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace('/login?next=/hub');
+        return;
+      }
+      const { data } = await supabase
+        .from('profiles')
+        .select('id,username,full_name,avatar_url,plan_id,trust_score,coin_balance,creator_code,verify_level')
+        .eq('id', user.id)
+        .single();
+      setProfile(data as Profile | null);
+      setLoading(false);
+    };
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- router is stable
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
+  if (loading) {
+    return (
+      <div style={{ minHeight:'100vh', background:'#03050A', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:'rgba(255,255,255,.3)', letterSpacing:'.12em' }}>Lädt…</div>
+      </div>
+    );
+  }
+
+  // Profile should always exist after auth, but handle gracefully
+  const planId: PlanId = (profile?.plan_id as PlanId) || 'gratis';
+  const plan = PLANS[planId];
+  const displayName = profile?.full_name || profile?.username || 'Creator';
+  const username = profile?.username || '';
+  const trustScore = profile?.trust_score ?? null;
+  const coinBalance = profile?.coin_balance ?? 0;
+  const creatorCode = profile?.creator_code || '—';
+  const verifyLevel = profile?.verify_level ?? 1;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white" style={{ fontFamily:"'Syne',sans-serif" }}>
@@ -105,62 +144,43 @@ export default function HubPage() {
         </div>
 
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          {/* Live indicator */}
-          <div style={{ display:'flex', alignItems:'center', gap:5, background:'#0B0F18', border:'1px solid #1A2130', borderRadius:20, padding:'4px 10px' }}>
-            <div style={{ width:5, height:5, borderRadius:'50%', background:'#00FF88', animation:'pulse 1.2s ease infinite' }}/>
-            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.3)' }}>Live</span>
-          </div>
-
           {/* Notifications */}
           <button onClick={()=>setNotifOpen(p=>!p)} style={{ position:'relative', background:'#0B0F18', border:'1px solid #1A2130', borderRadius:8, width:34, height:34, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:14 }}>
             🔔
-            <span style={{ position:'absolute', top:5, right:5, width:7, height:7, background:'#EF4444', borderRadius:'50%', border:'1.5px solid #03050A' }}/>
           </button>
 
           {/* Plan badge */}
-          <Link href="/pricing" style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:8, border:`1px solid ${plan.color}40`, background:plan.color+'12', fontFamily:"'DM Mono',monospace", fontSize:10, color:plan.color, letterSpacing:'.06em', fontWeight:700 }}>
+          <Link href="/dashboard/billing" style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:5, padding:'5px 11px', borderRadius:8, border:`1px solid ${plan.color}40`, background:plan.color+'12', fontFamily:"'DM Mono',monospace", fontSize:10, color:plan.color, letterSpacing:'.06em', fontWeight:700 }}>
             {plan.emoji} {plan.name}
           </Link>
 
           {/* Avatar */}
           <Link href="/apps/creatorseal/dashboard" style={{ textDecoration:'none', width:32, height:32, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, border:`1.5px solid ${plan.color}60`, background:plan.color+'18' }}>
-            {CREATOR.avatar}
+            {profile?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.avatar_url} alt={displayName} style={{ width:'100%', height:'100%', borderRadius:6, objectFit:'cover' }}/>
+            ) : '🎬'}
           </Link>
 
           {/* Logout */}
-          <Link href="/login" style={{ fontFamily:"'DM Mono',monospace", fontSize:9, letterSpacing:'.1em', color:'rgba(255,255,255,.2)', textDecoration:'none', padding:'5px 10px', border:'1px solid #1A2130', borderRadius:6 }}>
+          <button onClick={handleSignOut} style={{ fontFamily:"'DM Mono',monospace", fontSize:9, letterSpacing:'.1em', color:'rgba(255,255,255,.2)', background:'none', border:'1px solid #1A2130', borderRadius:6, padding:'5px 10px', cursor:'pointer' }}>
             Logout
-          </Link>
+          </button>
         </div>
       </nav>
 
-      {/* Notification dropdown */}
+      {/* Notification dropdown placeholder */}
       {notifOpen&&(
-        <div style={{ position:'fixed', top:58, right:16, width:320, background:'#080C14', border:'1px solid #1A2130', borderRadius:12, zIndex:200, overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,.5)' }}>
+        <div style={{ position:'fixed', top:58, right:16, width:300, background:'#080C14', border:'1px solid #1A2130', borderRadius:12, zIndex:200, overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,.5)' }}>
           <div style={{ padding:'12px 16px', borderBottom:'1px solid #1A2130', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
             <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.4)', letterSpacing:'.12em', textTransform:'uppercase' }}>Benachrichtigungen</span>
             <button onClick={()=>setNotifOpen(false)} style={{ background:'none', border:'none', color:'rgba(255,255,255,.25)', cursor:'pointer', fontSize:12 }}>✕</button>
           </div>
-          {RECENT_ACTIVITY.map((a,i)=>(
-            <div key={i} style={{ padding:'10px 16px', borderBottom:'1px solid #0D1117', display:'flex', gap:10, alignItems:'flex-start', background:a.urgent?'rgba(239,68,68,.04)':'transparent' }}>
-              <span style={{ fontSize:14, flexShrink:0, marginTop:1 }}>{a.icon}</span>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:'rgba(255,255,255,.5)', marginBottom:2 }}>{a.app}</div>
-                <div style={{ fontSize:12, color:'#E4E6EF', lineHeight:1.4 }}>{a.text}</div>
-              </div>
-              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.2)', flexShrink:0 }}>{a.time}</span>
-            </div>
-          ))}
+          <div style={{ padding:'24px 16px', textAlign:'center' }}>
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.25)' }}>Keine neuen Benachrichtigungen</div>
+          </div>
         </div>
       )}
-
-      {/* ── DEMO NOTICE ── */}
-      <div style={{ background:'rgba(245,158,11,.05)', borderBottom:'1px solid rgba(245,158,11,.15)', padding:'8px 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-        <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(245,158,11,.7)' }}>
-          ◌ Demo-Ansicht — Daten werden nach Login durch dein echtes Konto ersetzt
-        </span>
-        <Link href="/login" style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'#C9A84C', textDecoration:'none' }}>Einloggen →</Link>
-      </div>
 
       <div style={{ maxWidth:1200, margin:'0 auto', padding:'24px 20px' }}>
 
@@ -168,17 +188,25 @@ export default function HubPage() {
         <div className="fu" style={{ display:'flex', alignItems:'center', gap:16, marginBottom:28, background:'#080C14', border:`1px solid ${plan.color}30`, borderRadius:16, padding:'20px 24px', position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', top:0, right:0, width:300, height:'100%', background:`radial-gradient(ellipse at right, ${plan.color}08, transparent)`, pointerEvents:'none' }}/>
           <div style={{ width:52, height:52, borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, border:`2px solid ${plan.color}60`, background:plan.color+'15', flexShrink:0 }}>
-            {CREATOR.avatar}
+            🎬
           </div>
           <div style={{ flex:1 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4, flexWrap:'wrap' }}>
-              <span style={{ fontWeight:800, fontSize:20 }}>{CREATOR.name}</span>
+              <span style={{ fontWeight:800, fontSize:20 }}>{displayName}</span>
               <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, padding:'2px 8px', background:plan.color+'20', border:`1px solid ${plan.color}50`, color:plan.color, borderRadius:4, letterSpacing:'.08em' }}>{plan.emoji} {plan.name.toUpperCase()}</span>
             </div>
-            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.3)' }}>@{CREATOR.username} · Trust Score: <span style={{ color:'#00C853' }}>{CREATOR.trustScore}</span> · Code: <span style={{ color:'rgba(255,255,255,.5)' }}>{CREATOR.code}</span></div>
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.3)' }}>
+              @{username}
+              {trustScore !== null && <> · Trust Score: <span style={{ color:'#00C853' }}>{trustScore.toFixed(1)}</span></>}
+              {creatorCode !== '—' && <> · <span style={{ color:'rgba(255,255,255,.5)' }}>{creatorCode}</span></>}
+            </div>
           </div>
           <div style={{ display:'flex', gap:16, flexShrink:0 }}>
-            {[{v:totalFollowers,l:'Follower'},{v:'7',l:'Apps aktiv'},{v:'98.2',l:'Trust'}].map(s=>(
+            {[
+              { v: trustScore !== null ? trustScore.toFixed(1) : '—', l:'Trust Score' },
+              { v: `Lv.${verifyLevel}`, l:'Verify Level' },
+              { v: coinBalance.toLocaleString('de-DE'), l:'Coins' },
+            ].map(s=>(
               <div key={s.l} style={{ textAlign:'center' }}>
                 <div style={{ fontWeight:800, fontSize:20, color:plan.color }}>{s.v}</div>
                 <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.3)' }}>{s.l}</div>
@@ -186,37 +214,20 @@ export default function HubPage() {
             ))}
           </div>
           <div style={{ display:'flex', gap:8, flexShrink:0 }}>
-            <Link href="/apps/creatorseal/dashboard" style={{ textDecoration:'none', padding:'8px 14px', borderRadius:8, background:'#0B0F18', border:'1px solid #1A2130', color:'rgba(255,255,255,.5)', fontFamily:"'DM Mono',monospace", fontSize:10, transition:'all .15s' }}>
+            <Link href="/apps/creatorseal/dashboard" style={{ textDecoration:'none', padding:'8px 14px', borderRadius:8, background:'#0B0F18', border:'1px solid #1A2130', color:'rgba(255,255,255,.5)', fontFamily:"'DM Mono',monospace", fontSize:10 }}>
               🛡 Mein Profil
             </Link>
-            <Link href="/pricing" style={{ textDecoration:'none', padding:'8px 14px', borderRadius:8, background:plan.color, color:'#000', fontFamily:"'DM Mono',monospace", fontSize:10, fontWeight:700 }}>
+            <Link href="/dashboard/billing" style={{ textDecoration:'none', padding:'8px 14px', borderRadius:8, background:plan.color, color:'#000', fontFamily:"'DM Mono',monospace", fontSize:10, fontWeight:700 }}>
               Upgrade
             </Link>
           </div>
-        </div>
-
-        {/* ── KPI STRIP ── */}
-        <div className="fu d1" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:28 }}>
-          {[
-            {v:'€2.816',l:'MRR (alle Apps)',c:'#00C853',s:'↑ +12% vs. Vormonat'},
-            {v:'847',l:'Waitlist Signups',c:'#8B5CF6',s:'+23 heute · viral'},
-            {v:'€328',l:'Revenue gerettet',c:'#3B82F6',s:'ChurnRescue · diese Woche'},
-            {v:'4',l:'Offene Reviews',c:'#EF4444',s:'KI-Antwort bereit'},
-          ].map(s=>(
-            <div key={s.l} style={{ background:'#080C14', border:'1px solid #1A2130', borderRadius:12, padding:'16px 18px', position:'relative', overflow:'hidden' }}>
-              <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:`linear-gradient(90deg, ${s.c}, transparent)` }}/>
-              <div style={{ fontWeight:800, fontSize:24, color:s.c, lineHeight:1 }}>{s.v}</div>
-              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.35)', margin:'4px 0 3px', letterSpacing:'.08em', textTransform:'uppercase' }}>{s.l}</div>
-              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.25)' }}>{s.s}</div>
-            </div>
-          ))}
         </div>
 
         {/* ── APP GRID ── */}
         <div className="fu d2" style={{ marginBottom:28 }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
             <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.35)', letterSpacing:'.15em', textTransform:'uppercase' }}>// Meine Apps</div>
-            <Link href="/" style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(0,212,255,.5)', textDecoration:'none' }}>Alle 16 Apps ansehen →</Link>
+            <Link href="/" style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(0,212,255,.5)', textDecoration:'none' }}>Alle Apps ansehen →</Link>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
             {APPS.map((app, i) => (
@@ -255,25 +266,38 @@ export default function HubPage() {
         {/* ── BOTTOM ROW ── */}
         <div className="fu d4" style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:16 }}>
 
-          {/* Recent Activity */}
+          {/* Plan info */}
           <div style={{ background:'#080C14', border:'1px solid #1A2130', borderRadius:12, overflow:'hidden' }}>
-            <div style={{ padding:'12px 16px', borderBottom:'1px solid #1A2130', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.35)', letterSpacing:'.12em', textTransform:'uppercase' }}>// Beispiel-Aktivität</span>
-              <Link href="/workflows" style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(0,212,255,.5)', textDecoration:'none' }}>⚡ Workflows →</Link>
+            <div style={{ padding:'12px 16px', borderBottom:'1px solid #1A2130' }}>
+              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.35)', letterSpacing:'.12em', textTransform:'uppercase' }}>// Dein Plan</span>
             </div>
-            {RECENT_ACTIVITY.map((a,i)=>(
-              <div key={i} style={{ padding:'10px 16px', borderBottom:'1px solid #0D1117', display:'flex', gap:10, alignItems:'center', background: a.urgent?'rgba(239,68,68,.03)':'transparent' }}>
-                <span style={{ fontSize:16, flexShrink:0 }}>{a.icon}</span>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ display:'flex', gap:6, alignItems:'center', marginBottom:2 }}>
-                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:a.color, padding:'1px 5px', background:a.color+'15', borderRadius:3 }}>{a.app}</span>
-                    {a.urgent&&<span style={{ fontFamily:"'DM Mono',monospace", fontSize:8, color:'#EF4444', padding:'1px 5px', background:'rgba(239,68,68,.15)', borderRadius:3 }}>DRINGEND</span>}
-                  </div>
-                  <div style={{ fontSize:12, color:'rgba(255,255,255,.65)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{a.text}</div>
+            <div style={{ padding:'20px 24px' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+                <span style={{ fontSize:32 }}>{plan.emoji}</span>
+                <div>
+                  <div style={{ fontWeight:800, fontSize:18, color:plan.color }}>{plan.name}</div>
+                  <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'rgba(255,255,255,.3)', marginTop:2 }}>{plan.tagline}</div>
                 </div>
-                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.2)', flexShrink:0 }}>{a.time}</span>
               </div>
-            ))}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
+                {[
+                  { l:'KI-Antworten/Mo', v: plan.limits.aiReplies === -1 ? '∞' : String(plan.limits.aiReplies) },
+                  { l:'Plattformen', v: plan.limits.platforms === -1 ? '∞' : String(plan.limits.platforms) },
+                  { l:'Workflows', v: plan.limits.workflows === -1 ? '∞' : String(plan.limits.workflows) },
+                  { l:'Verify Level', v: String(plan.verifyLevel) },
+                ].map(s=>(
+                  <div key={s.l} style={{ background:'#0B0F18', borderRadius:8, padding:'10px 12px', border:'1px solid #1A2130' }}>
+                    <div style={{ fontWeight:800, fontSize:16, color:plan.color }}>{s.v}</div>
+                    <div style={{ fontFamily:"'DM Mono',monospace", fontSize:9, color:'rgba(255,255,255,.25)', marginTop:2 }}>{s.l}</div>
+                  </div>
+                ))}
+              </div>
+              {planId !== 'diamant' && (
+                <Link href="/dashboard/billing" style={{ textDecoration:'none', display:'block', textAlign:'center', padding:'10px', borderRadius:8, background:plan.color, color:'#000', fontFamily:"'DM Mono',monospace", fontSize:10, fontWeight:700 }}>
+                  Plan upgraden →
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Quick Actions */}
@@ -283,12 +307,12 @@ export default function HubPage() {
             </div>
             <div style={{ padding:12, display:'flex', flexDirection:'column', gap:8 }}>
               {[
-                { icon:'🤖', label:'KI-Antwort generieren', sub:'ReviewRadar · 4 offen', color:'#3B82F6', href:'/apps/reviewradar/dashboard' },
-                { icon:'💳', label:'Failed Payments retrien', sub:'ChurnRescue · €297 gefährdet', color:'#EF4444', href:'/apps/churnrescue/dashboard' },
-                { icon:'🚀', label:'Launch Sequence starten', sub:'WaitlistKit · 847 bereit', color:'#8B5CF6', href:'/apps/waitlistkit/dashboard' },
-                { icon:'🛡', label:'Content verifizieren', sub:'CreatorSeal · QR + Blockchain', color:'#C9A84C', href:'/apps/creatorseal/dashboard' },
-                { icon:'⚡', label:'Workflow Hub', sub:'12 Workflows · 3 aktiv', color:'#00D4FF', href:'/workflows' },
-                { icon:'🛍', label:'RealSync Store', sub:'Coins einlösen · Bald verfügbar', color:'#C9A84C', href:'/store' },
+                { icon:'🛡', label:'Content verifizieren', sub:'CreatorSeal · QR + C2PA', color:'#C9A84C', href:'/apps/creatorseal/dashboard' },
+                { icon:'⭐', label:'Reviews verwalten', sub:'ReviewRadar · KI-Antworten', color:'#3B82F6', href:'/apps/reviewradar/dashboard' },
+                { icon:'💳', label:'Failed Payments', sub:'ChurnRescue · Win-Back', color:'#EF4444', href:'/apps/churnrescue/dashboard' },
+                { icon:'🚀', label:'Waitlist starten', sub:'WaitlistKit · Viral Referral', color:'#8B5CF6', href:'/apps/waitlistkit/dashboard' },
+                { icon:'⚙️', label:'Einstellungen', sub:'Profil · Passwort · Plan', color:'#6B7280', href:'/dashboard/settings' },
+                { icon:'💰', label:'Abonnement', sub:'Billing · Upgrade', color:plan.color, href:'/dashboard/billing' },
               ].map(a=>(
                 <Link key={a.label} href={a.href} style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:10, padding:'10px 11px', background:'#0B0F18', border:'1px solid #1A2130', borderRadius:8, transition:'all .15s' }}
                   onMouseEnter={e=>{e.currentTarget.style.borderColor=a.color+'40';e.currentTarget.style.background=a.color+'08';}}
