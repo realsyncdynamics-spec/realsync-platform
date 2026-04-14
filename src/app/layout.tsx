@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://realsyncdynamics.de'),
   title: {
     default: 'RealSync Dynamics — The Creator OS',
     template: '%s | RealSync Dynamics',
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
   description: 'Das Creator OS für DACH — Trust-Score, KI-Reviews, Payment-Recovery, Brand Deals und OPTIMUS KI-Agent. Powered by Perplexity AI.',
   keywords: ['Creator OS', 'CreatorSeal', 'C2PA', 'Trust Score', 'Review Management', 'DACH', 'RealSync'],
   authors: [{ name: 'RealSync Dynamics', url: 'https://realsyncdynamics.de' }],
+  alternates: { canonical: '/' },
   openGraph: {
     title: 'RealSync Dynamics — The Creator OS',
     description: 'Trust-Score · KI-Reviews · Payment-Recovery · Brand Deals · OPTIMUS KI-Agent',
