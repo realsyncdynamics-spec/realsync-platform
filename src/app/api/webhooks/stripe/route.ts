@@ -9,6 +9,17 @@ function getSupabaseAdmin() {
   );
 }
 
+// Reverse-map Stripe price ID → our plan_id using env vars
+function planIdFromPriceId(priceId: string): string {
+  const map: Record<string, string> = {};
+  if (process.env.STRIPE_BRONZE_PRICE_ID)  map[process.env.STRIPE_BRONZE_PRICE_ID]  = 'bronze';
+  if (process.env.STRIPE_SILBER_PRICE_ID)  map[process.env.STRIPE_SILBER_PRICE_ID]  = 'silber';
+  if (process.env.STRIPE_GOLD_PRICE_ID)    map[process.env.STRIPE_GOLD_PRICE_ID]    = 'gold';
+  if (process.env.STRIPE_PLATIN_PRICE_ID)  map[process.env.STRIPE_PLATIN_PRICE_ID]  = 'platin';
+  if (process.env.STRIPE_DIAMANT_PRICE_ID) map[process.env.STRIPE_DIAMANT_PRICE_ID] = 'diamant';
+  return map[priceId] || 'unknown';
+}
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
@@ -27,29 +38,64 @@ export async function POST(request: NextRequest) {
   const supabaseAdmin = getSupabaseAdmin();
   const obj = event.data.object as any;
 
-  if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+  if (
+    event.type === 'customer.subscription.created' ||
+    event.type === 'customer.subscription.updated'
+  ) {
     const customerId = obj.customer as string;
     const customer = await stripe.customers.retrieve(customerId) as any;
-    const userId = customer.metadata?.supabase_user_id;
-    if (userId) {
-      await supabaseAdmin.from('subscriptions').upsert({
-        user_id: userId,
-        stripe_customer_id: customerId,
-        stripe_subscription_id: obj.id,
-        status: obj.status,
-        plan_id: obj.items?.data[0]?.price?.lookup_key || 'unknown',
-        current_period_end: obj.current_period_end,
-      }, { onConflict: 'stripe_subscription_id' });
+    const userId: string | undefined = customer.metadata?.supabase_user_id;
+    if (!userId) {
+      // Customer created before this convention — skip profile update
+      return NextResponse.json({ received: true });
     }
-  } else if (event.type === 'customer.subscription.deleted') {
-    await supabaseAdmin.from('subscriptions').update({ status: 'canceled' }).eq('stripe_subscription_id', obj.id);
-  }
 
-  await supabaseAdmin.from('webhook_events').insert({
-    event_type: event.type,
-    payload: event.data.object,
-    processed_at: new Date().toISOString(),
-  });
+    const priceId: string = obj.items?.data[0]?.price?.id || '';
+    const planId = planIdFromPriceId(priceId);
+    const periodEnd = obj.current_period_end
+      ? new Date(obj.current_period_end * 1000).toISOString()
+      : null;
+
+    // 1. Upsert into subscriptions table
+    await supabaseAdmin.from('subscriptions').upsert({
+      user_id: userId,
+      stripe_customer_id: customerId,
+      stripe_sub_id: obj.id,
+      status: obj.status,
+      plan_id: planId,
+      billing_cycle: obj.items?.data[0]?.plan?.interval === 'year' ? 'yearly' : 'monthly',
+      current_period_end: periodEnd,
+    }, { onConflict: 'stripe_sub_id' });
+
+    // 2. Update profiles.plan_id so the app reflects the paid plan immediately
+    if (planId !== 'unknown' && obj.status === 'active') {
+      await supabaseAdmin.from('profiles').update({
+        plan_id: planId,
+        plan_expires_at: periodEnd,
+        plan_source: 'stripe',
+        stripe_customer_id: customerId,
+      }).eq('id', userId);
+    }
+
+  } else if (event.type === 'customer.subscription.deleted') {
+    // Mark subscription canceled
+    await supabaseAdmin
+      .from('subscriptions')
+      .update({ status: 'canceled' })
+      .eq('stripe_sub_id', obj.id);
+
+    // Revert profile to gratis
+    const customerId = obj.customer as string;
+    const customer = await stripe.customers.retrieve(customerId) as any;
+    const userId: string | undefined = customer.metadata?.supabase_user_id;
+    if (userId) {
+      await supabaseAdmin.from('profiles').update({
+        plan_id: 'gratis',
+        plan_expires_at: null,
+        plan_source: 'direct',
+      }).eq('id', userId);
+    }
+  }
 
   return NextResponse.json({ received: true });
 }

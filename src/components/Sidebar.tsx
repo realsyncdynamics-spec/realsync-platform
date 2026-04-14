@@ -71,8 +71,11 @@ export default function Sidebar({ user, plan }: { user: any; plan: string }) {
           <span className="text-[9px] text-zinc-500 tracking-[0.2em]">CREATOR OS</span>
         </div>
         <span className={`ml-auto px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wider border ${
-          plan === "pro" ? "border-yellow-500/40 text-yellow-400 bg-yellow-500/10" :
-          plan === "starter" ? "border-yellow-700/40 text-yellow-600 bg-yellow-700/10" :
+          plan === "diamant" ? "border-blue-300/40 text-blue-300 bg-blue-300/10" :
+          plan === "platin"  ? "border-cyan-400/40 text-cyan-400 bg-cyan-400/10" :
+          plan === "gold"    ? "border-yellow-500/40 text-yellow-400 bg-yellow-500/10" :
+          plan === "silber"  ? "border-gray-400/40 text-gray-300 bg-gray-400/10" :
+          plan === "bronze"  ? "border-orange-600/40 text-orange-500 bg-orange-600/10" :
           "border-zinc-700 text-zinc-500 bg-zinc-800"
         }`}>{plan.toUpperCase()}</span>
       </div>

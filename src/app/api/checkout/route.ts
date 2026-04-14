@@ -60,7 +60,12 @@ export async function POST(req: NextRequest) {
     mode: "subscription",
     success_url: `${req.nextUrl.origin}/checkout/success?plan_success=${planId}`,
     cancel_url: `${req.nextUrl.origin}/dashboard/billing?canceled=true`,
+    // metadata on session (for checkout.session.completed webhook)
     metadata: { supabase_user_id: user.id, plan_id: planId },
+    // metadata forwarded to subscription object (for customer.subscription.* webhooks)
+    subscription_data: {
+      metadata: { supabase_user_id: user.id, plan_id: planId },
+    },
   });
 
   return NextResponse.json({ url: session.url });

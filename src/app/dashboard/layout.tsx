@@ -7,22 +7,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: userTenant } = await supabase
-    .from("user_tenants")
-    .select("tenant_id")
-    .eq("user_id", user.id)
-    .single();
-
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan")
-    .eq("tenant_id", userTenant?.tenant_id ?? "")
+  // Get plan from profiles table (source of truth)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("plan_id")
+    .eq("id", user.id)
     .single();
 
   return (
     <div className="min-h-screen bg-zinc-950 text-yellow-50 flex">
-      <Sidebar user={user} plan={subscription?.plan ?? "free"} />
+      <Sidebar user={user} plan={profile?.plan_id ?? "gratis"} />
       <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 }
+
