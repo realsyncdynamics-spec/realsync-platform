@@ -11,11 +11,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Passwort min. 8 Zeichen' }, { status: 400 });
     }
     const supabase = await createClient();
+    // After email confirmation, paid-plan users land on billing to complete checkout
+    const postConfirmPath = plan !== 'gratis' ? '/dashboard/billing' : '/hub';
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: {
-        data: { full_name: name },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
+        data: { full_name: name, pending_plan_id: plan },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback?next=${postConfirmPath}`,
       },
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });

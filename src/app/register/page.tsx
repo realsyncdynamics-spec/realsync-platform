@@ -47,8 +47,10 @@ function RegisterContent() {
       setLoading(false);
       setStep(2);
       const source = searchParams.get('source');
+      // Redirect to onboarding after short delay — actual post-confirmation
+      // destination (hub or billing) is set via emailRedirectTo in the API
       const dest = source === 'creatorseal' ? '/onboarding/creatorseal' : '/onboarding';
-      setTimeout(() => router.push(dest), 2200);
+      setTimeout(() => router.push(dest), 2800);
     } catch {
       setError('Verbindungsfehler — bitte nochmals versuchen.');
       setLoading(false);
@@ -223,8 +225,10 @@ function RegisterContent() {
               <h2 style={{ fontWeight:800, fontSize:22, color:'#E4E6EF', marginBottom:6 }}>Willkommen, {form.name.split(' ')[0]}!</h2>
               <p style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:'rgba(255,255,255,.35)', lineHeight:1.8 }}>
                 {PLANS[plan].emoji} {PLANS[plan].name}-Plan ausgewählt.<br/>
-                Bitte bestätige deine E-Mail, um fortzufahren.<br/>
-                Du wirst weitergeleitet…
+                Bitte bestätige deine E-Mail — du erhältst eine Mail von Supabase.<br/>
+                {plan !== 'gratis'
+                  ? 'Nach Bestätigung wirst du zur Zahlungsseite weitergeleitet.'
+                  : 'Nach Bestätigung wirst du zu deinem Hub weitergeleitet.'}
               </p>
               <div style={{ marginTop:16, height:2, background:'#1A2130', borderRadius:2, overflow:'hidden' }}>
                 <div style={{ height:'100%', background:'linear-gradient(90deg,#00D4FF,#00C853)', borderRadius:2 }}/>
