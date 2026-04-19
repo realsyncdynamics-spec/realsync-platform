@@ -1,0 +1,81 @@
+{
+  "name": "RealSync Knowledge Vault",
+  "version": "1.0.0",
+  "description": "Obsidian-powered knowledge management for AI agents and team collaboration",
+  "config": {
+    "theme": "dark",
+    "vimMode": false,
+    "spellcheck": true,
+    "showLineNumbers": true,
+    "livePreview": true,
+    "strictLineBreaks": false,
+    "showFrontmatter": true,
+    "alwaysUpdateLinks": true,
+    "useMarkdownLinks": false,
+    "newFileLocation": "current",
+    "attachmentFolderPath": "_attachments",
+    "defaultViewMode": "preview"
+  },
+  "folders": [
+    {
+      "name": "Agents",
+      "path": "agents",
+      "description": "Documentation for all AI agents"
+    },
+    {
+      "name": "Brainstorms",
+      "path": "brainstorms",
+      "description": "Brainstorming session notes"
+    },
+    {
+      "name": "Customer Notes",
+      "path": "customers",
+      "description": "Customer feedback and requirements"
+    },
+    {
+      "name": "Scaling Plans",
+      "path": "scaling",
+      "description": "Infrastructure and scaling strategies"
+    },
+    {
+      "name": "Architecture",
+      "path": "architecture",
+      "description": "System architecture decisions"
+    },
+    {
+      "name": "Daily Notes",
+      "path": "daily",
+      "description": "Daily logs and observations"
+    },
+    {
+      "name": "Templates",
+      "path": "_templates",
+      "description": "Note templates"
+    }
+  ],
+  "hotkeys": {
+    "new-note": "Ctrl+N",
+    "search": "Ctrl+Shift+F",
+    "graph-view": "Ctrl+G",
+    "quick-switcher": "Ctrl+O",
+    "command-palette": "Ctrl+P",
+    "toggle-preview": "Ctrl+E",
+    "backlinks": "Ctrl+Shift+B"
+  },
+  "plugins": {
+    "core": [
+      "file-explorer",
+      "global-search",
+      "graph",
+      "backlink",
+      "outgoing-links",
+      "tag-pane",
+      "page-preview",
+      "daily-notes",
+      "templates",
+      "markdown-importer",
+      "word-count"
+    ],
+    "community": []
+  }
+}
