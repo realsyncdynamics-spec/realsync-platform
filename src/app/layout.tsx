@@ -1,38 +1,22 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: {
-    default: 'RealSync Dynamics — The Creator OS',
-    template: '%s | RealSync Dynamics',
-  },
-  description: 'Das Creator OS für DACH — Trust-Score, KI-Reviews, Payment-Recovery, Brand Deals und OPTIMUS KI-Agent. Powered by Perplexity AI.',
-  keywords: ['Creator OS', 'CreatorSeal', 'C2PA', 'Trust Score', 'Review Management', 'DACH', 'RealSync'],
-  authors: [{ name: 'RealSync Dynamics', url: 'https://realsyncdynamics.de' }],
-  openGraph: {
-    title: 'RealSync Dynamics — The Creator OS',
-    description: 'Trust-Score · KI-Reviews · Payment-Recovery · Brand Deals · OPTIMUS KI-Agent',
-    url: 'https://realsyncdynamics.de',
-    siteName: 'RealSync Dynamics',
-    locale: 'de_DE',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'RealSync Dynamics — The Creator OS',
-    description: 'Trust-Score · KI-Reviews · Payment-Recovery · Brand Deals · OPTIMUS',
-  },
-  robots: { index: true, follow: true },
+  title: "RealSync Dynamics - The Creator OS",
+  description: "Multi-Tenant SaaS-Plattform für Creator im DACH-Markt",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="de" className={cn("font-sans", geist.variable)}>
-      <body>{children}</body>
+    <html lang="de">
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
