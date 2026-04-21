@@ -1,7 +1,7 @@
 import { inngest } from './client';
 import { getAgent } from '../registry';
 import { createEmitter, getRun, getRunStatus, setRunStatus } from '../persistence';
-import { runAgent } from '../runtime';
+import { dispatch } from '../dispatch';
 import type { AgentRunContext } from '../types';
 
 export const runAgentFn = inngest.createFunction(
@@ -20,7 +20,6 @@ export const runAgentFn = inngest.createFunction(
     const controller = new AbortController();
     const emit = createEmitter(runId);
 
-    // Cross-process cancellation: poll agent_runs.status; signal controller.
     const poll = setInterval(async () => {
       const status = await getRunStatus(runId).catch(() => null);
       if (status === 'cancelled' && !controller.signal.aborted) controller.abort();
@@ -41,7 +40,7 @@ export const runAgentFn = inngest.createFunction(
           : (rawInput as { prompt?: string } | null)?.prompt ??
             JSON.stringify(rawInput ?? {});
 
-      const { finalOutput } = await runAgent({ definition, input, ctx });
+      const { finalOutput } = await dispatch({ definition, input, ctx });
 
       const terminal = controller.signal.aborted ? 'cancelled' : 'completed';
       await setRunStatus(runId, terminal, { final_output: finalOutput });

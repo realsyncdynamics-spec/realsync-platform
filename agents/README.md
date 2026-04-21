@@ -1,5 +1,12 @@
 # 🤖 RealSyncDynamics AI Agent Network
 
+> **Status (April 2026):** Paperclip ist weiterhin dokumentiert, wird aber
+> als **Legacy-Laufzeit** über den Adapter `src/lib/agent-os/adapters/paperclip.ts`
+> eingebunden. Neue Agenten laufen standardmäßig auf dem **Claude Agent SDK**
+> unter `src/lib/agent-os/`. Details: [`docs/adr/0001-agent-os-overview.md`](../docs/adr/0001-agent-os-overview.md).
+> Diese JSON-Hierarchie (`agent-hierarchy.json`) ist weiterhin die Quelle
+> der Wahrheit und wird vom AgentOS-Registry zur Boot-Zeit validiert.
+
 ## Paperclip Framework — Professional Agent Organization
 
 ### 🎯 Mission
@@ -97,7 +104,13 @@ Specialist → Lead → VP → CIO
 
 ## 🚀 API Usage
 
-### Endpoint: `/api/agents`
+### AgentOS (neu, Claude Agent SDK)
+
+Neue produktive Einstiegspunkte leben unter `/api/agent-os/runs`. Siehe
+`src/app/agents/demo/page.tsx` für ein Live-Beispiel und die ADRs unter
+`docs/adr/` für Architektur und Entscheidungen.
+
+### Legacy: `/api/agents` (Paperclip)
 
 #### Run Brainstorm
 ```typescript
