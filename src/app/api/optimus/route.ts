@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { logAiInteraction, type AiFeature } from '@/lib/ai/audit';
 
 // ═══════════════════════════════════════════════════════════════
 //  OPTIMUS — AI AGENT (Perplexity-powered)
 //  Cross-app orchestrator für das gesamte RealSync Ökosystem
 //
-//  Modelle: sonar-pro (Echtzeit-Web), sonar-reasoning (Deep),
-//           sonar-turbo (Fast), llama-3-sonar-large-32k-online
-//
-//  Coin-Modell:
-//  - sonar-turbo   →  5 Coins/Anfrage   (Bronze+)
-//  - sonar-pro     → 15 Coins/Anfrage   (Silber+)
-//  - sonar-deep    → 30 Coins/Anfrage   (Gold+)
-//  - Auto-Tool     → 50 Coins/Aktion    (Platin+)
+//  Jeder Call wird für EU AI Act Art. 12 in public.ai_interactions
+//  protokolliert. Writes via Service-Role in src/lib/ai/audit.ts.
 // ═══════════════════════════════════════════════════════════════
 
 const SYSTEM_PROMPT = `Du bist OPTIMUS — der KI-Kern des RealSync Creator OS.
@@ -42,49 +38,89 @@ Wenn neue Tools benötigt werden, schlage deren Installation vor.
 
 Antworte immer präzise, strukturiert und auf das Creator-Ökosystem fokussiert.`;
 
-const TOOLS: Record<string, { desc: string; app: string; route: string; coins: number }> = {
-  verify_content:      { desc:'Content C2PA verifizieren',        app:'CreatorSeal',    route:'/apps/creatorseal/dashboard',   coins:10 },
-  generate_review_reply:{ desc:'KI-Antwort auf Review',           app:'ReviewRadar',    route:'/apps/reviewradar/dashboard',   coins:5  },
-  create_ad:           { desc:'KI-Ad generieren',                  app:'AdEngine',       route:'/apps/adengine/dashboard',      coins:15 },
-  analyze_trends:      { desc:'Trends analysieren',                app:'TrendRadar',     route:'/apps/trendradar/dashboard',    coins:10 },
-  generate_content:    { desc:'Content/Script erstellen',          app:'ContentForge',   route:'/apps/contentforge/dashboard',  coins:8  },
-  schedule_post:       { desc:'Post planen',                       app:'ScheduleMaster', route:'/apps/schedulemaster/dashboard',coins:3  },
-  analyze_churn:       { desc:'Churn-Risiko analysieren',          app:'ChurnRescue',    route:'/apps/churnrescue/dashboard',   coins:12 },
-  launch_waitlist:     { desc:'Waitlist/Launch starten',           app:'WaitlistKit',    route:'/apps/waitlistkit/dashboard',   coins:20 },
-  revenue_optimize:    { desc:'Revenue-Streams optimieren',        app:'MonetizeMax',    route:'/apps/monetizemax/dashboard',   coins:15 },
-  brand_deal_find:     { desc:'Brand Deals finden',                app:'CollabHub',      route:'/apps/collabhub/dashboard',     coins:25 },
-  cross_platform_stats:{ desc:'Cross-Platform Analytics',          app:'AnalyticsPro',   route:'/apps/analyticspro/dashboard',  coins:8  },
-  store_recommend:     { desc:'Store-Artikel empfehlen',           app:'RealSync Store', route:'/store',                        coins:2  },
-};
-
 export async function POST(request: NextRequest) {
+  const startedAt = Date.now();
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
+  const userAgent = request.headers.get('user-agent') ?? null;
+
+  let userId: string | null = null;
   try {
-    const { message, model = 'sonar', context = [], appContext = null } = await request.json();
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    userId = data?.user?.id ?? null;
+  } catch {
+    // Anonymous call — leave userId null.
+  }
 
-    if (!message) return NextResponse.json({ error: 'Nachricht fehlt' }, { status: 400 });
+  let body: {
+    message?: string;
+    model?: string;
+    context?: Array<{ role: string; content: string }>;
+    appContext?: string | null;
+    disclosureAcknowledged?: boolean;
+  };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Ungültige Anfrage' }, { status: 400 });
+  }
 
-    const PERPLEXITY_KEY = process.env.PERPLEXITY_API_KEY;
+  const {
+    message,
+    model = 'sonar',
+    context = [],
+    appContext = null,
+    disclosureAcknowledged = false,
+  } = body;
+  const feature: AiFeature = appContext === 'ReviewRadar' ? 'reviewradar' : 'optimus';
 
-    // If no API key, return smart demo response
-    if (!PERPLEXITY_KEY) {
-      return NextResponse.json(generateDemoResponse(message, appContext));
-    }
+  if (!message) {
+    await logAiInteraction({
+      userId, feature, provider: 'none', model: String(model),
+      status: 'blocked', errorMessage: 'missing_message',
+      latencyMs: Date.now() - startedAt, ip, userAgent,
+      disclosureAcknowledged,
+    });
+    return NextResponse.json({ error: 'Nachricht fehlt' }, { status: 400 });
+  }
 
-    // Build messages with context
-    const messages = [
-      { role: 'system', content: SYSTEM_PROMPT + (appContext ? `\n\nAktueller App-Kontext: ${appContext}` : '') },
-      ...context.slice(-6), // Last 6 messages for context
-      { role: 'user', content: message },
-    ];
+  const PERPLEXITY_KEY = process.env.PERPLEXITY_API_KEY;
 
+  // Demo mode — kein API-Key.
+  if (!PERPLEXITY_KEY) {
+    const demo = generateDemoResponse(message, appContext);
+    await logAiInteraction({
+      userId, feature, provider: 'demo', model: 'demo',
+      requestText: message, responseText: demo.response,
+      tokensIn: 0, tokensOut: 0, coinCost: 0,
+      latencyMs: Date.now() - startedAt, status: 'success',
+      ip, userAgent, disclosureAcknowledged,
+    });
+    return NextResponse.json(demo);
+  }
+
+  const chosenModel =
+    model === 'deep' ? 'sonar-deep-research' : model === 'fast' ? 'sonar' : 'sonar-pro';
+  const coinCost = model === 'deep' ? 50 : model === 'fast' ? 5 : 15;
+
+  const messages = [
+    {
+      role: 'system',
+      content: SYSTEM_PROMPT + (appContext ? `\n\nAktueller App-Kontext: ${appContext}` : ''),
+    },
+    ...context.slice(-6),
+    { role: 'user', content: message },
+  ];
+
+  try {
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${PERPLEXITY_KEY}`,
+        Authorization: `Bearer ${PERPLEXITY_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model === 'deep' ? 'sonar-deep-research' : model === 'fast' ? 'sonar' : 'sonar-pro',
+        model: chosenModel,
         messages,
         max_tokens: 1500,
         temperature: 0.7,
@@ -97,18 +133,30 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const err = await response.text();
+      await logAiInteraction({
+        userId, feature, provider: 'perplexity', model: chosenModel,
+        requestText: message, coinCost,
+        latencyMs: Date.now() - startedAt, status: 'error',
+        errorMessage: `perplexity_${response.status}: ${err.slice(0, 200)}`,
+        ip, userAgent, disclosureAcknowledged,
+      });
       return NextResponse.json({ error: `Perplexity: ${err}` }, { status: 500 });
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || 'Keine Antwort';
     const citations = data.citations || [];
-
-    // Detect which tools/apps were mentioned
     const detectedApps = detectApps(message + ' ' + content);
+    const tokensIn = data.usage?.prompt_tokens ?? null;
+    const tokensOut = data.usage?.completion_tokens ?? null;
 
-    // Calculate coin cost
-    const coinCost = model === 'deep' ? 50 : model === 'fast' ? 5 : 15;
+    await logAiInteraction({
+      userId, feature, provider: 'perplexity', model: chosenModel,
+      requestText: message, responseText: content,
+      tokensIn, tokensOut, coinCost,
+      latencyMs: Date.now() - startedAt, status: 'success',
+      ip, userAgent, disclosureAcknowledged,
+    });
 
     return NextResponse.json({
       response: content,
@@ -117,9 +165,15 @@ export async function POST(request: NextRequest) {
       coinCost,
       model,
     });
-
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    await logAiInteraction({
+      userId, feature, provider: 'perplexity', model: chosenModel,
+      requestText: message, coinCost,
+      latencyMs: Date.now() - startedAt, status: 'error',
+      errorMessage, ip, userAgent, disclosureAcknowledged,
+    });
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -144,7 +198,7 @@ function detectApps(text: string): { app: string; route: string; reason: string 
   if (lower.includes('coins') || lower.includes('store') || lower.includes('shop'))
     found.push({ app: 'RealSync Store', route: '/store', reason: 'Coins & Store' });
 
-  return found.slice(0, 3); // Max 3 suggestions
+  return found.slice(0, 3);
 }
 
 function generateDemoResponse(message: string, appContext: string | null) {
@@ -176,7 +230,6 @@ function generateDemoResponse(message: string, appContext: string | null) {
     detectedApps = [];
   }
 
-  // Prepend demo warning to all responses when running without a real API key
   const demoHeader = `> ⚠️ **Demo-Modus** — PERPLEXITY_API_KEY nicht konfiguriert. Diese Antwort ist kein echtes KI-Ergebnis.\n\n`;
   return {
     response: demoHeader + response,
@@ -187,11 +240,6 @@ function generateDemoResponse(message: string, appContext: string | null) {
     citations: [],
   };
 }
-
-// ── MODEL COUNCIL ─────────────────────────────────────────────
-// Perplexity Feature (Feb 2026): Simultane Multi-Modell Ausgaben
-// RealSync Implementation: Mehrere Perspektiven für Creator-Anfragen
-// API: Mehrere parallele Perplexity-Calls mit unterschiedlichem System-Prompt
 
 export async function GET() {
   const hasKey = !!process.env.PERPLEXITY_API_KEY;
