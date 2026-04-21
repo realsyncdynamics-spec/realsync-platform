@@ -59,7 +59,7 @@
   "crons": [
     {
       "path": "/api/cron/agent-health-check",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/cron/cleanup-old-logs",

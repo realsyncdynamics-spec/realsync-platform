@@ -1,8 +1,11 @@
 name: Gemini CLI PR Review
 
+# Disabled on pull_request: the action google-github-actions/run-gemini-cli@v1
+# is not resolvable and the job has been failing on every PR (including on
+# main-based builds). Re-enable by restoring the pull_request trigger and
+# pinning a valid action version.
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: read
