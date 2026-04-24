@@ -90,6 +90,17 @@ if [[ "$OPENAI_API_KEY" == sk-test-* ]]; then
   warn "OPENAI_API_KEY looks like a test/fake key (prefix sk-test-)."
 fi
 
+# Optional: Starter-Paket price id. Validated only when set (not required for
+# a bootstrap deploy, but the /starter funnel needs it).
+if [[ -n "${STRIPE_STARTER_PRICE_ID:-}" ]]; then
+  if [[ ! "$STRIPE_STARTER_PRICE_ID" =~ ^price_ ]]; then
+    die "STRIPE_STARTER_PRICE_ID does not look like a Stripe price id (expected price_... got: $(mask "$STRIPE_STARTER_PRICE_ID"))"
+  fi
+  info "  STRIPE_STARTER_PRICE_ID = $(mask "$STRIPE_STARTER_PRICE_ID")"
+else
+  warn "STRIPE_STARTER_PRICE_ID unset — /starter checkout will return 503 until it is configured."
+fi
+
 info "env summary:"
 info "  DATABASE_URL          = $(mask "$DATABASE_URL")"
 info "  REDIS_URL             = $(mask "$REDIS_URL")"
