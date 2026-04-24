@@ -55,7 +55,8 @@ export default async function AdminPage() {
     { count: starterSignups7d },
     { count: paidReferralsCount },
     { count: webhookErrors24h },
-    { data: recentSignups }
+    { data: recentSignups },
+    { data: paidReferralRows }
   ] = await Promise.all([
     admin
       .schema("creatorseal")
@@ -92,8 +93,48 @@ export default async function AdminPage() {
       .select("email, plan_code, starter_access_until, referral_code")
       .eq("plan_code", "starter")
       .order("starter_access_until", { ascending: false })
-      .limit(10)
+      .limit(10),
+    admin
+      .schema("creatorseal")
+      .from("referrals")
+      .select("referrer_id")
+      .not("paid_at", "is", null)
   ]);
+
+  // Aggregate paid referrals per referrer (client-side — fine for admin panel
+  // volumes; push to a DB view when we outgrow this).
+  const referralCounts = new Map<string, number>();
+  for (const row of paidReferralRows ?? []) {
+    referralCounts.set(
+      row.referrer_id,
+      (referralCounts.get(row.referrer_id) ?? 0) + 1
+    );
+  }
+  const topReferrerIds = Array.from(referralCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  const { data: topReferrerProfiles } = topReferrerIds.length
+    ? await admin
+        .schema("creatorseal")
+        .from("profiles")
+        .select("user_id, email, referral_code")
+        .in(
+          "user_id",
+          topReferrerIds.map(([id]) => id)
+        )
+    : { data: [] as { user_id: string; email: string | null; referral_code: string | null }[] };
+
+  const leaderboard = topReferrerIds.map(([userId, count]) => {
+    const p = topReferrerProfiles?.find((r) => r.user_id === userId);
+    return {
+      userId,
+      email: p?.email ?? null,
+      referralCode: p?.referral_code ?? null,
+      count,
+      bonusDaysEarned: Math.floor(count / 3) * 30
+    };
+  });
 
   const starterPrice = PLANS.starter.priceEur;
   const grossRevenue7d = (starterSignups7d ?? 0) * starterPrice;
@@ -217,6 +258,90 @@ export default async function AdminPage() {
             value={webhookErrors24h ?? 0}
             color={(webhookErrors24h ?? 0) > 0 ? "#ff6b6b" : "var(--text-muted)"}
           />
+        </div>
+
+        <div className="card" style={{ padding: 24, marginBottom: 24 }}>
+          <div
+            className="mono"
+            style={{
+              fontSize: 10,
+              color: "var(--gold)",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              marginBottom: 14
+            }}
+          >
+            Referral-Leaderboard · Top 10
+          </div>
+          {leaderboard.length === 0 ? (
+            <div className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              Noch keine bezahlten Referrals.
+            </div>
+          ) : (
+            <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ textAlign: "left", color: "var(--text-subtle)" }}>
+                  <th style={{ padding: "8px 6px", borderBottom: "1px solid var(--border)", width: 36 }}>#</th>
+                  <th style={{ padding: "8px 6px", borderBottom: "1px solid var(--border)" }}>E-Mail</th>
+                  <th style={{ padding: "8px 6px", borderBottom: "1px solid var(--border)" }}>Ref-Code</th>
+                  <th style={{ padding: "8px 6px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>Bezahlt</th>
+                  <th style={{ padding: "8px 6px", borderBottom: "1px solid var(--border)", textAlign: "right" }}>Bonus-Tage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((row, i) => (
+                  <tr key={row.userId}>
+                    <td
+                      className="mono"
+                      style={{
+                        padding: "8px 6px",
+                        borderBottom: "1px solid var(--border-subtle)",
+                        color: i < 3 ? "var(--gold)" : "var(--text-subtle)",
+                        fontWeight: i < 3 ? 700 : 400
+                      }}
+                    >
+                      {i + 1}
+                    </td>
+                    <td style={{ padding: "8px 6px", borderBottom: "1px solid var(--border-subtle)" }}>
+                      {row.email ?? "—"}
+                    </td>
+                    <td
+                      className="mono"
+                      style={{
+                        padding: "8px 6px",
+                        borderBottom: "1px solid var(--border-subtle)",
+                        color: "var(--text-subtle)"
+                      }}
+                    >
+                      {row.referralCode ?? "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: "8px 6px",
+                        borderBottom: "1px solid var(--border-subtle)",
+                        textAlign: "right",
+                        fontWeight: 700,
+                        color: "var(--cyan)"
+                      }}
+                    >
+                      {row.count}
+                    </td>
+                    <td
+                      className="mono"
+                      style={{
+                        padding: "8px 6px",
+                        borderBottom: "1px solid var(--border-subtle)",
+                        textAlign: "right",
+                        color: "var(--green)"
+                      }}
+                    >
+                      +{row.bonusDaysEarned}d
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <div className="card" style={{ padding: 24 }}>
