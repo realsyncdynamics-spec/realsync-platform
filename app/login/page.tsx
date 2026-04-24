@@ -8,16 +8,21 @@ export const metadata = {
   title: "Login"
 };
 
-async function signInWithGoogle() {
+async function signInWithGoogle(formData: FormData) {
   "use server";
 
   const supabase = await createClient();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://realsyncdynamics.de";
 
+  // Only accept same-site relative paths as the post-login destination.
+  const rawNext = (formData.get("next") as string | null) ?? "/dashboard";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
+  const callback = `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`;
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${siteUrl}/auth/callback`,
+      redirectTo: callback,
       queryParams: {
         access_type: "offline",
         prompt: "consent"
@@ -26,7 +31,7 @@ async function signInWithGoogle() {
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    redirect(`/login?error=${encodeURIComponent(error.message)}&next=${encodeURIComponent(next)}`);
   }
 
   if (data?.url) {
@@ -39,17 +44,19 @@ async function signInWithGoogle() {
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams: Promise<{ error?: string; redirect?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const params = await searchParams;
+  const rawNext = params.next ?? "/dashboard";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
 
-  // If already logged in, go straight to dashboard
+  // If already logged in, honor the `next` param.
   const supabase = await createClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();
   if (user) {
-    redirect("/dashboard");
+    redirect(next);
   }
 
   return (
@@ -118,6 +125,7 @@ export default async function LoginPage({
             )}
 
             <form action={signInWithGoogle}>
+              <input type="hidden" name="next" value={next} />
               <button
                 type="submit"
                 className="google-btn"

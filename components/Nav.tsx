@@ -62,6 +62,17 @@ export default async function Nav() {
             Features
           </Link>
           <Link
+            href="/starter"
+            className="mono nav-link"
+            style={{
+              fontSize: 11,
+              padding: "6px 12px",
+              color: "var(--gold)"
+            }}
+          >
+            Starter €9,90
+          </Link>
+          <Link
             href="/#pricing"
             className="mono nav-link"
             style={{
