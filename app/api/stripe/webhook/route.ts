@@ -19,6 +19,57 @@ const PLAN_BY_LEVEL: Record<string, string> = {
   "5": "diamant"
 };
 
+const UTM_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content"
+] as const;
+type UtmKey = (typeof UTM_KEYS)[number];
+type Utm = Partial<Record<UtmKey, string>>;
+
+function extractUtm(metadata: Stripe.Metadata | null | undefined): Utm {
+  if (!metadata) return {};
+  const out: Utm = {};
+  for (const k of UTM_KEYS) {
+    const v = metadata[k];
+    if (typeof v === "string" && v) out[k] = v;
+  }
+  return out;
+}
+
+// Fires a Slack/Discord-compatible webhook when a paid Starter comes in.
+// Non-blocking — if the notification POST fails, we still ack the Stripe
+// webhook so Stripe doesn't retry.
+async function notifyStarterPurchase(args: {
+  email: string | null;
+  referredByCode?: string | null;
+  utm: Utm;
+}): Promise<void> {
+  const url = process.env.STARTER_NOTIFY_WEBHOOK_URL;
+  if (!url) return;
+
+  const lines: string[] = [
+    `🎉 New Starter · €9,90 · ${args.email ?? "(no email)"}`
+  ];
+  if (args.referredByCode) lines.push(`ref: ${args.referredByCode}`);
+  const utmPairs = Object.entries(args.utm)
+    .map(([k, v]) => `${k.replace(/^utm_/, "")}=${v}`)
+    .join(" · ");
+  if (utmPairs) lines.push(`utm: ${utmPairs}`);
+
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: lines.join("\n"), content: lines.join("\n") })
+    });
+  } catch (e) {
+    console.error("[webhook] starter notify failed:", e);
+  }
+}
+
 // Starter: €9,90 one-off → 90 days access; grant referrer bonus after every
 // REFERRALS_PER_BONUS paid invites. All writes go through the service-role
 // client (RLS does not gate writes here).
@@ -29,6 +80,7 @@ async function handleStarterCheckout(
     email: string | null;
     customerId: string;
     referredByCode?: string | null;
+    utm?: Utm;
   }
 ): Promise<void> {
   const { userId, email, customerId, referredByCode } = args;
@@ -199,13 +251,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, already_processed: true });
     }
 
+    // Capture object type, livemode, and any metadata that might be useful
+    // for later attribution queries (UTMs, plan_code, referred_by_code).
+    const objAny = event.data.object as {
+      object?: string;
+      metadata?: Record<string, string> | null;
+    };
+    const meta = objAny.metadata ?? {};
+    const summary: Record<string, unknown> = {
+      object_type: objAny.object ?? null,
+      livemode: event.livemode
+    };
+    if (meta.plan_code) summary.plan_code = meta.plan_code;
+    if (meta.referred_by_code) summary.referred_by_code = meta.referred_by_code;
+    for (const k of UTM_KEYS) {
+      if (meta[k]) summary[k] = meta[k];
+    }
+
     await db.schema("creatorseal").from("webhook_events").insert({
       stripe_event_id: event.id,
       event_type: event.type,
-      payload_summary: {
-        object_type: (event.data.object as { object?: string })?.object || null,
-        livemode: event.livemode
-      }
+      payload_summary: summary
     });
   } catch (e) {
     console.error("[webhook] idempotency check failed:", e);
@@ -248,11 +314,18 @@ export async function POST(req: NextRequest) {
 
         // Starter: one-off payment → 90 days access, no subscription row.
         if (metaPlanCode === "starter") {
+          const utm = extractUtm(session.metadata);
           await handleStarterCheckout(db, {
             userId,
             email: userEmail,
             customerId,
-            referredByCode: metaReferredByCode
+            referredByCode: metaReferredByCode,
+            utm
+          });
+          await notifyStarterPurchase({
+            email: userEmail,
+            referredByCode: metaReferredByCode,
+            utm
           });
           break;
         }

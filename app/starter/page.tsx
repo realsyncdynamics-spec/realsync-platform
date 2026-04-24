@@ -10,10 +10,22 @@ export const metadata = {
     "Einmalzahlung €9,90. 90 Tage Vollzugriff. Kein Abo, keine stille Verlängerung."
 };
 
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+type UtmKey = (typeof UTM_KEYS)[number];
+type Utm = Partial<Record<UtmKey, string>>;
+
+function sanitizeUtm(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const cleaned = value.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 64);
+  return cleaned || undefined;
+}
+
 export default async function StarterPage({
   searchParams
 }: {
-  searchParams: Promise<{ ref?: string; canceled?: string }>;
+  searchParams: Promise<
+    { ref?: string; canceled?: string } & Partial<Record<UtmKey, string>>
+  >;
 }) {
   const params = await searchParams;
   const cookieStore = await cookies();
@@ -21,6 +33,12 @@ export default async function StarterPage({
     params.ref?.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 16) ||
     cookieStore.get("rs_ref")?.value ||
     null;
+
+  const utm: Utm = {};
+  for (const k of UTM_KEYS) {
+    const v = sanitizeUtm(params[k]);
+    if (v) utm[k] = v;
+  }
 
   const plan = PLANS.starter;
 
@@ -157,7 +175,7 @@ export default async function StarterPage({
               ))}
             </ul>
 
-            <StarterCheckoutButton referralCode={referralCode} />
+            <StarterCheckoutButton referralCode={referralCode} utm={utm} />
 
             {referralCode && (
               <div

@@ -7,10 +7,28 @@ import { rateLimit, clientIp } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+type UtmKey = (typeof UTM_KEYS)[number];
+type Utm = Partial<Record<UtmKey, string>>;
+
 type Body = {
   planCode?: PlanCode;
   referralCode?: string;
+  utm?: Utm;
 };
+
+function sanitizeUtm(input: Utm | undefined): Record<string, string> {
+  if (!input) return {};
+  const out: Record<string, string> = {};
+  for (const k of UTM_KEYS) {
+    const v = input[k];
+    if (typeof v === "string") {
+      const cleaned = v.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 64);
+      if (cleaned) out[k] = cleaned;
+    }
+  }
+  return out;
+}
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req);
@@ -80,27 +98,24 @@ export async function POST(req: NextRequest) {
     req.cookies.get("rs_ref")?.value ||
     null;
 
+  const utm = sanitizeUtm(body.utm);
+
+  const sharedMetadata: Record<string, string> = {
+    user_id: user.id,
+    plan_code: plan.code,
+    plan_level: plan.code,
+    ...(referralCode ? { referred_by_code: referralCode } : {}),
+    ...utm
+  };
+
   const session = await stripe.checkout.sessions.create({
     mode: plan.oneOff ? "payment" : "subscription",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${siteUrl}/dashboard?starter=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}/starter?canceled=1`,
-    metadata: {
-      user_id: user.id,
-      plan_code: plan.code,
-      plan_level: plan.code,
-      ...(referralCode ? { referred_by_code: referralCode } : {})
-    },
-    payment_intent_data: plan.oneOff
-      ? {
-          metadata: {
-            user_id: user.id,
-            plan_code: plan.code,
-            ...(referralCode ? { referred_by_code: referralCode } : {})
-          }
-        }
-      : undefined
+    metadata: sharedMetadata,
+    payment_intent_data: plan.oneOff ? { metadata: sharedMetadata } : undefined
   });
 
   return NextResponse.json({ url: session.url });

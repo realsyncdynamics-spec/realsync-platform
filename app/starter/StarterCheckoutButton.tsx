@@ -2,10 +2,20 @@
 
 import { useState } from "react";
 
+type Utm = Partial<{
+  utm_source: string;
+  utm_medium: string;
+  utm_campaign: string;
+  utm_term: string;
+  utm_content: string;
+}>;
+
 export default function StarterCheckoutButton({
-  referralCode
+  referralCode,
+  utm
 }: {
   referralCode: string | null;
+  utm?: Utm;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +29,8 @@ export default function StarterCheckoutButton({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           planCode: "starter",
-          referralCode: referralCode ?? undefined
+          referralCode: referralCode ?? undefined,
+          utm: utm && Object.keys(utm).length > 0 ? utm : undefined
         })
       });
 
