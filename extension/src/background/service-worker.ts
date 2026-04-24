@@ -43,7 +43,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       chrome.tabs.sendMessage(tab.id!, {
         type: 'PREFILL_PROMPT',
         payload: prompt,
-      } as ExtMessage & { payload: string });
+      } satisfies ExtMessage);
     }
   }, 500);
 });

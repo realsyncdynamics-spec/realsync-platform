@@ -188,7 +188,8 @@ export type ExtMessage =
   | { type: 'GET_PAGE_CONTEXT' }
   | { type: 'PAGE_CONTEXT'; payload: PageContext }
   | { type: 'OPEN_SIDEBAR' }
-  | { type: 'CONTEXT_UPDATED'; payload: PageContext };
+  | { type: 'CONTEXT_UPDATED'; payload: PageContext }
+  | { type: 'PREFILL_PROMPT'; payload: string };
 
 // ── Storage keys ─────────────────────────────────────────────
 export const STORAGE_KEYS = {
