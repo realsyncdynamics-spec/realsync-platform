@@ -105,6 +105,24 @@ Testen:
 5. `/impressum` → alle Felder ausgefüllt
 6. Stripe Dashboard → Webhook → Send test webhook → HTTP 200
 
+### 7. Bootstrap deploy script (optional, alternative zu Schritten 1–6)
+
+`scripts/bootstrap_deploy.sh` validates env vars, checks GCP access, installs deps, builds, applies Supabase migrations, and deploys. Use it for first-time or one-shot deploys:
+
+```bash
+gcloud projects describe realsync-prod-001
+
+export DATABASE_URL="postgresql://..."
+export REDIS_URL="redis://..."
+export OPENAI_API_KEY="sk-..."
+export STRIPE_SECRET_KEY="sk_live_..."
+export STRIPE_WEBHOOK_SECRET="whsec_..."
+
+bash scripts/bootstrap_deploy.sh
+```
+
+Flags: `SKIP_GCLOUD=1`, `SKIP_BUILD=1`, `SKIP_MIGRATIONS=1`, `SKIP_DEPLOY=1`. Override the GCP project with `GCP_PROJECT=my-other-project`. Vercel deploy requires `VERCEL_TOKEN`.
+
 ## Architektur
 
 ```

@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import {
+  STARTER_DURATION_DAYS,
+  REFERRAL_BONUS_DAYS,
+  REFERRALS_PER_BONUS
+} from "@/lib/plans";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +18,168 @@ const PLAN_BY_LEVEL: Record<string, string> = {
   "4": "platin",
   "5": "diamant"
 };
+
+const UTM_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content"
+] as const;
+type UtmKey = (typeof UTM_KEYS)[number];
+type Utm = Partial<Record<UtmKey, string>>;
+
+function extractUtm(metadata: Stripe.Metadata | null | undefined): Utm {
+  if (!metadata) return {};
+  const out: Utm = {};
+  for (const k of UTM_KEYS) {
+    const v = metadata[k];
+    if (typeof v === "string" && v) out[k] = v;
+  }
+  return out;
+}
+
+// Fires a Slack/Discord-compatible webhook when a paid Starter comes in.
+// Non-blocking — if the notification POST fails, we still ack the Stripe
+// webhook so Stripe doesn't retry.
+async function notifyStarterPurchase(args: {
+  email: string | null;
+  referredByCode?: string | null;
+  utm: Utm;
+}): Promise<void> {
+  const url = process.env.STARTER_NOTIFY_WEBHOOK_URL;
+  if (!url) return;
+
+  const lines: string[] = [
+    `🎉 New Starter · €9,90 · ${args.email ?? "(no email)"}`
+  ];
+  if (args.referredByCode) lines.push(`ref: ${args.referredByCode}`);
+  const utmPairs = Object.entries(args.utm)
+    .map(([k, v]) => `${k.replace(/^utm_/, "")}=${v}`)
+    .join(" · ");
+  if (utmPairs) lines.push(`utm: ${utmPairs}`);
+
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: lines.join("\n"), content: lines.join("\n") })
+    });
+  } catch (e) {
+    console.error("[webhook] starter notify failed:", e);
+  }
+}
+
+// Starter: €9,90 one-off → 90 days access; grant referrer bonus after every
+// REFERRALS_PER_BONUS paid invites. All writes go through the service-role
+// client (RLS does not gate writes here).
+async function handleStarterCheckout(
+  db: ReturnType<typeof createServiceRoleClient>,
+  args: {
+    userId: string;
+    email: string | null;
+    customerId: string;
+    referredByCode?: string | null;
+    utm?: Utm;
+  }
+): Promise<void> {
+  const { userId, email, customerId, referredByCode } = args;
+
+  // Load current starter_access_until + referral_bonus_days to extend, not reset.
+  const { data: existing } = await db
+    .schema("creatorseal")
+    .from("profiles")
+    .select("starter_access_until, referral_bonus_days")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const now = new Date();
+  const base =
+    existing?.starter_access_until && new Date(existing.starter_access_until) > now
+      ? new Date(existing.starter_access_until)
+      : now;
+  const bonusDays = existing?.referral_bonus_days ?? 0;
+  const newUntil = new Date(
+    base.getTime() + (STARTER_DURATION_DAYS + bonusDays) * 86_400_000
+  );
+
+  await db
+    .schema("creatorseal")
+    .from("profiles")
+    .upsert(
+      {
+        user_id: userId,
+        email: email ?? "",
+        plan_code: "starter",
+        stripe_customer_id: customerId,
+        starter_access_until: newUntil.toISOString()
+      },
+      { onConflict: "user_id" }
+    );
+
+  if (!referredByCode) return;
+
+  // Look up referrer by their referral_code and record the paid referral.
+  const { data: referrer } = await db
+    .schema("creatorseal")
+    .from("profiles")
+    .select("user_id, starter_access_until, referral_bonus_days")
+    .eq("referral_code", referredByCode)
+    .maybeSingle();
+
+  if (!referrer || referrer.user_id === userId) return;
+
+  await db
+    .schema("creatorseal")
+    .from("referrals")
+    .upsert(
+      {
+        referrer_id: referrer.user_id,
+        referred_id: userId,
+        paid_at: now.toISOString()
+      },
+      { onConflict: "referred_id" }
+    );
+
+  // Count paid-but-not-yet-rewarded referrals; grant bonus per full batch of 3.
+  const { data: pending } = await db
+    .schema("creatorseal")
+    .from("referrals")
+    .select("id")
+    .eq("referrer_id", referrer.user_id)
+    .is("rewarded_at", null)
+    .not("paid_at", "is", null)
+    .order("paid_at", { ascending: true });
+
+  if (!pending || pending.length < REFERRALS_PER_BONUS) return;
+
+  const batches = Math.floor(pending.length / REFERRALS_PER_BONUS);
+  const toReward = pending.slice(0, batches * REFERRALS_PER_BONUS).map((r) => r.id);
+  const newBonusDays = (referrer.referral_bonus_days ?? 0) + batches * REFERRAL_BONUS_DAYS;
+
+  const referrerBase =
+    referrer.starter_access_until && new Date(referrer.starter_access_until) > now
+      ? new Date(referrer.starter_access_until)
+      : now;
+  const newReferrerUntil = new Date(
+    referrerBase.getTime() + batches * REFERRAL_BONUS_DAYS * 86_400_000
+  );
+
+  await db
+    .schema("creatorseal")
+    .from("profiles")
+    .update({
+      referral_bonus_days: newBonusDays,
+      starter_access_until: newReferrerUntil.toISOString()
+    })
+    .eq("user_id", referrer.user_id);
+
+  await db
+    .schema("creatorseal")
+    .from("referrals")
+    .update({ rewarded_at: now.toISOString() })
+    .in("id", toReward);
+}
 
 // Resolve plan_code from either price_id (lookup_key) or metadata.plan_level
 async function resolvePlanCode(
@@ -84,13 +251,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, already_processed: true });
     }
 
+    // Capture object type, livemode, and any metadata that might be useful
+    // for later attribution queries (UTMs, plan_code, referred_by_code).
+    const objAny = event.data.object as {
+      object?: string;
+      metadata?: Record<string, string> | null;
+    };
+    const meta = objAny.metadata ?? {};
+    const summary: Record<string, unknown> = {
+      object_type: objAny.object ?? null,
+      livemode: event.livemode
+    };
+    if (meta.plan_code) summary.plan_code = meta.plan_code;
+    if (meta.referred_by_code) summary.referred_by_code = meta.referred_by_code;
+    for (const k of UTM_KEYS) {
+      if (meta[k]) summary[k] = meta[k];
+    }
+
     await db.schema("creatorseal").from("webhook_events").insert({
       stripe_event_id: event.id,
       event_type: event.type,
-      payload_summary: {
-        object_type: (event.data.object as { object?: string })?.object || null,
-        livemode: event.livemode
-      }
+      payload_summary: summary
     });
   } catch (e) {
     console.error("[webhook] idempotency check failed:", e);
@@ -104,23 +285,52 @@ export async function POST(req: NextRequest) {
         const subscriptionId = session.subscription as string | null;
         const customerEmail =
           session.customer_email || session.customer_details?.email || null;
+        const metaUserId = session.metadata?.user_id;
+        const metaPlanCode = session.metadata?.plan_code;
+        const metaReferredByCode = session.metadata?.referred_by_code;
 
-        if (!customerEmail || !customerId) break;
+        if (!customerId) break;
 
-        // Find user by email
-        const { data: users } = await db.auth.admin.listUsers();
-        const user = users?.users.find(
-          (u) => u.email?.toLowerCase() === customerEmail.toLowerCase()
-        );
+        // Resolve user: prefer metadata.user_id (set by our checkout route),
+        // fall back to email lookup for legacy subscription flows.
+        let userId: string | null = metaUserId ?? null;
+        let userEmail: string | null = customerEmail;
 
-        if (!user) {
+        if (!userId && customerEmail) {
+          const { data: users } = await db.auth.admin.listUsers();
+          const matched = users?.users.find(
+            (u) => u.email?.toLowerCase() === customerEmail.toLowerCase()
+          );
+          userId = matched?.id ?? null;
+          userEmail = matched?.email ?? userEmail;
+        }
+
+        if (!userId) {
           console.warn(
-            `[webhook] checkout.session.completed: no user found for ${customerEmail}`
+            `[webhook] checkout.session.completed: no user for email=${customerEmail} meta_user_id=${metaUserId}`
           );
           break;
         }
 
-        // Fetch full subscription to get line items
+        // Starter: one-off payment → 90 days access, no subscription row.
+        if (metaPlanCode === "starter") {
+          const utm = extractUtm(session.metadata);
+          await handleStarterCheckout(db, {
+            userId,
+            email: userEmail,
+            customerId,
+            referredByCode: metaReferredByCode,
+            utm
+          });
+          await notifyStarterPurchase({
+            email: userEmail,
+            referredByCode: metaReferredByCode,
+            utm
+          });
+          break;
+        }
+
+        // Subscription path (unchanged from pre-starter behavior).
         let planCode = "gratis";
         if (subscriptionId) {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
@@ -131,8 +341,8 @@ export async function POST(req: NextRequest) {
         }
 
         await db.schema("creatorseal").from("profiles").upsert({
-          user_id: user.id,
-          email: customerEmail,
+          user_id: userId,
+          email: userEmail ?? "",
           plan_code: planCode,
           stripe_customer_id: customerId
         });
@@ -143,7 +353,7 @@ export async function POST(req: NextRequest) {
             .from("subscriptions")
             .upsert(
               {
-                user_id: user.id,
+                user_id: userId,
                 stripe_subscription_id: subscriptionId,
                 stripe_customer_id: customerId,
                 plan_code: planCode,

@@ -78,6 +78,13 @@ export default function HomePage() {
             <Link href="/login" className="btn-primary">
               Kostenlos starten →
             </Link>
+            <Link
+              href="/starter"
+              className="btn-secondary"
+              style={{ borderColor: "var(--gold)", color: "var(--gold)" }}
+            >
+              3 Monate alles drin · €9,90 →
+            </Link>
             <Link href="#features" className="btn-secondary">
               Was kann das?
             </Link>
@@ -186,6 +193,96 @@ export default function HomePage() {
               title="Brand-Deals"
               desc="Matching zwischen verifizierten Creatorn und Marken. Nächstes Quartal."
             />
+          </div>
+        </div>
+      </section>
+
+      {/* STARTER-PAKET SPOTLIGHT */}
+      <section
+        id="starter"
+        style={{
+          padding: "60px 0",
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(255, 215, 0, 0.04) 50%, transparent 100%)"
+        }}
+      >
+        <div className="container" style={{ maxWidth: 720 }}>
+          <div
+            className="card fade-up"
+            style={{
+              padding: 36,
+              border: "1px solid rgba(255, 215, 0, 0.35)",
+              background: "rgba(255, 215, 0, 0.03)"
+            }}
+          >
+            <div
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: "var(--gold)",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                marginBottom: 14
+              }}
+            >
+              Starter-Paket · Launch-Angebot
+            </div>
+            <h2
+              style={{
+                fontSize: 32,
+                fontWeight: 800,
+                letterSpacing: "-0.015em",
+                lineHeight: 1.15,
+                marginBottom: 14
+              }}
+            >
+              3 Monate alles drin — €9,90 einmalig.
+            </h2>
+            <p
+              className="mono"
+              style={{
+                fontSize: 12,
+                color: "var(--text-muted)",
+                lineHeight: 1.7,
+                marginBottom: 22,
+                maxWidth: 560
+              }}
+            >
+              Einmalzahlung, 90 Tage Vollzugriff, kein Abo. Danach entscheidest
+              du neu. Lade 3 Freunde ein, die auch bezahlen → automatisch +30
+              Tage für dich.
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                alignItems: "center"
+              }}
+            >
+              <Link
+                href="/starter"
+                className="btn-primary"
+                style={{
+                  background: "var(--gold)",
+                  color: "#0a0a0a",
+                  fontWeight: 700
+                }}
+              >
+                Starter für €9,90 holen →
+              </Link>
+              <span
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: "var(--text-subtle)",
+                  lineHeight: 1.6
+                }}
+              >
+                14 Tage Widerrufsrecht · keine stille Verlängerung
+              </span>
+            </div>
           </div>
         </div>
       </section>

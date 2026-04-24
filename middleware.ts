@@ -30,11 +30,12 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Protect /dashboard — redirect to /login if not authenticated
-  if (path.startsWith("/dashboard") && !user) {
+  // Protect /dashboard and /admin — redirect to /login if not authenticated.
+  // Admin role check happens in the page itself (needs ADMIN_EMAILS env).
+  if ((path.startsWith("/dashboard") || path.startsWith("/admin")) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirect", path);
+    url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
 
