@@ -23,7 +23,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Build project
         run: npm run build
@@ -44,6 +44,6 @@ jobs:
 
       - name: Deploy notification
         run: |
-          echo "🚀 Build successful!"
-          echo "📦 Ready for deployment"
-          echo "ℹ️  Configure VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID secrets to enable automatic deployment"
+          echo "Build successful."
+          echo "Ready for deployment."
+          echo "Configure VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID secrets to enable automatic deployment."
