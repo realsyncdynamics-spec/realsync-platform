@@ -16,7 +16,14 @@ type DashboardProfile = {
   referral_code: string | null;
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams
+}: {
+  searchParams?: Promise<{ starter?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const showStarterSuccess = params.starter === "success";
+
   const supabase = await createClient();
   const {
     data: { user }
@@ -147,6 +154,35 @@ export default async function DashboardPage() {
             Willkommen zurück.
           </h1>
         </div>
+
+        {showStarterSuccess && (
+          <div
+            className="card"
+            style={{
+              padding: 18,
+              marginBottom: 20,
+              border: "1px solid rgba(16, 185, 129, 0.45)",
+              background: "rgba(16, 185, 129, 0.06)"
+            }}
+          >
+            <div
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: "var(--green)",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                marginBottom: 6
+              }}
+            >
+              Zahlung bestätigt
+            </div>
+            <div style={{ fontSize: 14, lineHeight: 1.5 }}>
+              Starter-Paket ist aktiv. Webhook kann ein paar Sekunden brauchen
+              — lade die Seite neu, falls der Zähler noch 0 Tage zeigt.
+            </div>
+          </div>
+        )}
 
         {starterActive && (
           <div
